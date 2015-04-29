@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: 692cc2fc19377b24090f79246ca8bb1b
+timeCreated: 1430321345
+licenseType: Free
+MonoImporter:
+  serializedVersion: 2
+  defaultReferences:
+  - mainCanvasPrefab: {instanceID: 0}
+  - particleSystemPrefab: {fileID: 188204, guid: 572a5f16fed258346bbd81441e75565a,
+      type: 2}
+  - particlePrefab: {fileID: 103028, guid: 5eff3f7b30d87a34c93bbeb94ca414a3, type: 2}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
