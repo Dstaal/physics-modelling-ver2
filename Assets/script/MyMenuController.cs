@@ -49,7 +49,7 @@ public class MyMenuController : MonoBehaviour {
 
 		else if (this.currentState == ParticleOptions.Moving) 
 		{
-			var pos = GetMousePos(LayerMask.NameToLayer("GroundLayer"));
+			var pos = GetMousePos("Ground");
 			if(pos.HasValue)
 			{
 				_particle.transform.position = pos.Value;
@@ -83,19 +83,20 @@ public class MyMenuController : MonoBehaviour {
 		//Initialize(MyParticleSystem parrnetParticleSystem, float startMass, Vector3 startPosition, Vector3 startVelocity, bool setPinned, float setLifeSpan) 
 	}
 
-	private RaycastHit? GetHitAtMousePos(LayerMask layer)
+	private RaycastHit? GetHitAtMousePos(string tag)
 	{
 		//Debug.Log("GetHitAtMousePos is running");
 		var ray = Camera.main.ScreenPointToRay (Input.mousePosition);
-		RaycastHit hit;
-		if (!Physics.Raycast (ray, out hit, 1000f, layer)) 
-		{
-			Debug.Log("GetHitAtMousePos retruned null ");
-			return null;
-		}
-		Debug.Log("GetHitAtMousePos retruned at hit");
-		return hit;
 
+		foreach (var hit in Physics.RaycastAll(ray,1000f))
+		{
+			if (hit.transform.CompareTag(tag))
+			{
+				Debug.Log("reteurned hit");
+					return hit;
+			}
+		}
+		return null;
 	}
 	
 	//vector3? means it nullable
@@ -104,10 +105,10 @@ public class MyMenuController : MonoBehaviour {
 	//if (nullablePos.HasValue)
 	//{ Vector3 = nullablePos.value;}
 
-	private Vector3? GetMousePos(LayerMask layer)
+	private Vector3? GetMousePos(string tag)
 	{
 		Debug.Log("GetMousePos is running");
-		var hit = GetHitAtMousePos (layer);
+		var hit = GetHitAtMousePos (tag);
 		if (!hit.HasValue) 
 		{
 			Debug.Log("GetMousePos retruned at null");
@@ -120,7 +121,7 @@ public class MyMenuController : MonoBehaviour {
 	private MyParticle GetParticleAtPos()
 	{
 		//Debug.Log("ran GetPartcileAtPos");
-		var hit = GetHitAtMousePos (LayerMask.NameToLayer ("ParticleLayer"));
+		var hit = GetHitAtMousePos ("Particle");
 		if(!hit.HasValue)
 		{
 			Debug.Log("GetPartcileAtpos retruned null ");
