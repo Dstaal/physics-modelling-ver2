@@ -33,10 +33,14 @@ public class MyMenuController : MonoBehaviour {
 	void Update () 
 	{
 
-		if (this.currentState == ParticleOptions.None) {
-			if (Input.GetMouseButtonDown (1)) {
+		if (this.currentState == ParticleOptions.None) 
+		{
+			//Debug.Log("in none state");
+			if (Input.GetMouseButtonDown (0)) {
+				//Debug.Log("mouse bnt down");
 				var hitParticle = GetParticleAtPos ();
 				if (hitParticle != null) {
+					Debug.Log("shoudl trigger moveing state");
 					this.currentState = ParticleOptions.Moving;
 					_particle = hitParticle;
 				}
@@ -81,13 +85,17 @@ public class MyMenuController : MonoBehaviour {
 
 	private RaycastHit? GetHitAtMousePos(LayerMask layer)
 	{
+		//Debug.Log("GetHitAtMousePos is running");
 		var ray = Camera.main.ScreenPointToRay (Input.mousePosition);
 		RaycastHit hit;
 		if (!Physics.Raycast (ray, out hit, 1000f, layer)) 
 		{
+			Debug.Log("GetHitAtMousePos retruned null ");
 			return null;
 		}
+		Debug.Log("GetHitAtMousePos retruned at hit");
 		return hit;
+
 	}
 	
 	//vector3? means it nullable
@@ -95,24 +103,30 @@ public class MyMenuController : MonoBehaviour {
 	//vector3? nullablePos = getPos(layermask.nameForLayer("particle"));
 	//if (nullablePos.HasValue)
 	//{ Vector3 = nullablePos.value;}
+
 	private Vector3? GetMousePos(LayerMask layer)
 	{
+		Debug.Log("GetMousePos is running");
 		var hit = GetHitAtMousePos (layer);
 		if (!hit.HasValue) 
 		{
+			Debug.Log("GetMousePos retruned at null");
 			return null;
 		}
-
+		Debug.Log("mousepos" + hit.Value.point);
 		return hit.Value.point;
 	}
 
 	private MyParticle GetParticleAtPos()
 	{
+		//Debug.Log("ran GetPartcileAtPos");
 		var hit = GetHitAtMousePos (LayerMask.NameToLayer ("ParticleLayer"));
 		if(!hit.HasValue)
 		{
+			Debug.Log("GetPartcileAtpos retruned null ");
 			return null;
 		}
+		Debug.Log("GetPartcileAtpos retruned after detecting a partcile" );
 		return hit.Value.transform.GetComponent<MyParticle> ();
 	}
 }
