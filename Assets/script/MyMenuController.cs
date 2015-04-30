@@ -5,6 +5,7 @@ public enum ParticleOptions
 {
 	None,
 	Moving,
+	Lifteing,
 	SpringSelection,
 	AttractionSelection,
 	DisplayConnections,
@@ -22,6 +23,9 @@ public class MyMenuController : MonoBehaviour {
 	private MyParticle _particle;
 	private Vector3 _startPosition = new Vector3(0,0,1);
 	private Vector3 _startVelocity = new Vector3(0,0,0);
+	private bool yLocked = false;
+	private float _lastKownX = 0;
+	private float _lastKownZ = 0;
 
 	// Use this for initialization
 	void Start () 
@@ -35,18 +39,27 @@ public class MyMenuController : MonoBehaviour {
 
 		if (this.currentState == ParticleOptions.None) 
 		{
-			//Debug.Log("in none state");
-			if (Input.GetMouseButtonDown (0)) {
-				//Debug.Log("mouse bnt down");
+
+			if (Input.GetMouseButtonDown (0))
+			{
 				var hitParticle = GetParticleAtPos ();
-				if (hitParticle != null) {
-					Debug.Log("shoudl trigger moveing state");
+				if (hitParticle != null) 
+				{
 					this.currentState = ParticleOptions.Moving;
 					_particle = hitParticle;
 				}
 			}
+			if (Input.GetMouseButtonDown(2))
+			{
+				var hitParticle = GetParticleAtPos ();
+				if (hitParticle != null) 
+				{
+					this.currentState = ParticleOptions.Lifteing;
+					_particle = hitParticle;
+				}
+			}
 		} 
-
+		// what we wonna do theleft mouse bnt id hold down
 		else if (this.currentState == ParticleOptions.Moving) 
 		{
 			var pos = GetMousePos("Ground");
@@ -55,13 +68,33 @@ public class MyMenuController : MonoBehaviour {
 				_particle.transform.position = pos.Value;
 			}
 		
-			if(Input.GetMouseButtonUp(1))
+			if(Input.GetMouseButtonUp(0))
 			{
 				this.currentState = ParticleOptions.DisplayConnections;
 				this.mainCanvasPrefab.SetActive(true);
+				
+				_particle.transform.position = tempPos;
 			}
 
+			if(Input.GetMouseButtonUp(2))
+			{
+				Debug.Log("setteing State back To none");
+				this.currentState = ParticleOptions.None;
+				yLocked = false;
+			}
+		}
 
+		//toggleing the right mouse bnt
+		if(Input.GetMouseButtonUp(1) && this.currentState != ParticleOptions.DisplayConnections)
+		{
+			this.currentState = ParticleOptions.DisplayConnections;
+			this.mainCanvasPrefab.SetActive(true);
+			//Add stuff here later
+		}
+		else if (Input.GetMouseButtonUp(1) && this.currentState == ParticleOptions.DisplayConnections)
+		{
+			this.currentState = ParticleOptions.None;
+			this.mainCanvasPrefab.SetActive(false);
 		}
 	}
 
@@ -72,7 +105,7 @@ public class MyMenuController : MonoBehaviour {
 		{
 			var particleSystemGo = Instantiate(particleSystemPrefab) as GameObject; 
 			_particleSystem = particleSystemGo.GetComponent<MyParticleSystem>().Initialize(new Vector3 (0,0,0),0);
-			//Initialize(gravity , drag)
+			//note Initialize(gravity , drag)
 		}
 
 		var newParticlePrefab = Instantiate(particlePrefab) as GameObject;
@@ -80,12 +113,12 @@ public class MyMenuController : MonoBehaviour {
 		
 		newParticle.Initialize(_particleSystem, 1, _startPosition,_startVelocity, false, 0);
 
-		//Initialize(MyParticleSystem parrnetParticleSystem, float startMass, Vector3 startPosition, Vector3 startVelocity, bool setPinned, float setLifeSpan) 
+		// note  Initialize(MyParticleSystem parrnetParticleSystem, float startMass, Vector3 startPosition, Vector3 startVelocity, bool setPinned, float setLifeSpan) 
 	}
 
 	private RaycastHit? GetHitAtMousePos(string tag)
 	{
-		//Debug.Log("GetHitAtMousePos is running");
+
 		var ray = Camera.main.ScreenPointToRay (Input.mousePosition);
 
 		foreach (var hit in Physics.RaycastAll(ray,1000f))
@@ -105,9 +138,10 @@ public class MyMenuController : MonoBehaviour {
 	//if (nullablePos.HasValue)
 	//{ Vector3 = nullablePos.value;}
 
+
 	private Vector3? GetMousePos(string tag)
 	{
-		Debug.Log("GetMousePos is running");
+
 		var hit = GetHitAtMousePos (tag);
 		if (!hit.HasValue) 
 		{
@@ -120,7 +154,7 @@ public class MyMenuController : MonoBehaviour {
 
 	private MyParticle GetParticleAtPos()
 	{
-		//Debug.Log("ran GetPartcileAtPos");
+
 		var hit = GetHitAtMousePos ("Particle");
 		if(!hit.HasValue)
 		{
