@@ -21,8 +21,11 @@ public class MyMenuController : MonoBehaviour {
 
 	private MyParticleSystem _particleSystem;
 	private MyParticle _particle;
-	private Vector3 _startPosition = new Vector3(0,0,1);
+	private Vector3 _startPosition = new Vector3(0,1,1);
 	private Vector3 _startVelocity = new Vector3(0,0,0);
+	private Vector3 _startGravity = new Vector3(0,-0.005f,0);
+	private float _startMass = 1;
+	private float _startDrag = 1;
 	private bool yLocked = false;
 	private float middleMouseClickAdjust = 1 ;
 
@@ -46,6 +49,7 @@ public class MyMenuController : MonoBehaviour {
 				{
 					this.currentState = ParticleOptions.Moving;
 					_particle = hitParticle;
+
 				}
 			}
 			if (Input.GetMouseButtonDown(2))
@@ -121,14 +125,13 @@ public class MyMenuController : MonoBehaviour {
 		if (_particleSystem == null)
 		{
 			var particleSystemGo = Instantiate(particleSystemPrefab) as GameObject; 
-			_particleSystem = particleSystemGo.GetComponent<MyParticleSystem>().Initialize(new Vector3 (0,0,0),0);
-			//note Initialize(gravity , drag)
+			_particleSystem = particleSystemGo.GetComponent<MyParticleSystem>().Initialize(_startGravity, _startDrag);
 		}
 
 		var newParticlePrefab = Instantiate(particlePrefab) as GameObject;
 		var newParticle = newParticlePrefab.GetComponent<MyParticle>();
 		
-		newParticle.Initialize(_particleSystem, 1, _startPosition,_startVelocity, false, 0);
+		newParticle.Initialize(_particleSystem, _startMass, _startPosition,_startVelocity, false, 0);
 
 		// note  Initialize(MyParticleSystem parrnetParticleSystem, float startMass, Vector3 startPosition, Vector3 startVelocity, bool setPinned, float setLifeSpan) 
 	}

@@ -11,6 +11,8 @@ public class MyParticleSystem : MonoBehaviour {
 	public List<MySpring> springs;
 	public List<MyAttraction> attractions;
 
+	private Vector3 _bounce = new Vector3 (0,0.1f,0);
+
 
 	public MyParticleSystem Initialize(Vector3 startGravity, float startDrag) 
 	{
@@ -33,6 +35,60 @@ public class MyParticleSystem : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
+
+		addGravity();
+		updateForces();
+		hitZero();
 	
 	}
+
+	private void addGravity() 
+	{
+		if (particles.Count > 0) 
+		{
+			foreach (MyParticle particle in particles) 
+			{
+				if (particle.transform.position.y > 0)
+				{
+				Vector3 gravityForce = this.gravity * particle.mass;
+				particle.AddForce(gravityForce);
+				}
+			}
+		}
+	}
+
+	private void hitZero()
+	{
+		if (particles.Count > 0) 
+		{
+			foreach (MyParticle particle in particles) 
+			{
+				if (particle.transform.position.y <= 0)
+				{
+					particle.ClearForce();
+					particle.AddForce(_bounce);
+					// somehow need to set _bounce = to velocity
+				}
+			}
+		}
+	}
+
+
+	private void updateForces()
+	{
+		if (particles.Count > 0)
+		{
+			foreach (MyParticle particle in particles)
+			{
+				particle.transform.position = particle.transform.position + particle.force;
+			}
+		}
+
+
+	}
+
+
+
+
+
 }
