@@ -24,9 +24,7 @@ public class MyMenuController : MonoBehaviour {
 	private Vector3 _startPosition = new Vector3(0,0,1);
 	private Vector3 _startVelocity = new Vector3(0,0,0);
 	private bool yLocked = false;
-	private float _lastKownX = 0;
-	private float _lastKownZ = 0;
-	private float ySpeed = 2;
+	private float middleMouseClickAdjust = 1 ;
 
 	// Use this for initialization
 	void Start () 
@@ -57,8 +55,6 @@ public class MyMenuController : MonoBehaviour {
 				{
 					this.currentState = ParticleOptions.Lifteing;
 					_particle = hitParticle;
-					_lastKownX = hitParticle.transform.position.x;
-					_lastKownZ = hitParticle.transform.position.z;
 					yLocked = true;
 				}
 			}
@@ -87,9 +83,10 @@ public class MyMenuController : MonoBehaviour {
 
 			if(height.HasValue && yLocked == true)
 			{
-				var heightY = ( height.Value.y - _particle.transform.position.y )  * Time.deltaTime ; 
+				var pos = _particle.transform.position;
+				var heightY = ( height.Value.y - pos.y )  * Time.fixedDeltaTime + middleMouseClickAdjust  ; 
 
-				Vector3 tempPos = new Vector3(_lastKownX, heightY, _lastKownZ);
+				Vector3 tempPos = new Vector3(pos.x, heightY, pos.z);
 
 				Debug.Log("tempPos =" + tempPos);
 
