@@ -26,6 +26,7 @@ public class MyMenuController : MonoBehaviour {
 	private bool yLocked = false;
 	private float _lastKownX = 0;
 	private float _lastKownZ = 0;
+	private float ySpeed = 2;
 
 	// Use this for initialization
 	void Start () 
@@ -56,6 +57,9 @@ public class MyMenuController : MonoBehaviour {
 				{
 					this.currentState = ParticleOptions.Lifteing;
 					_particle = hitParticle;
+					_lastKownX = hitParticle.transform.position.x;
+					_lastKownZ = hitParticle.transform.position.z;
+					yLocked = true;
 				}
 			}
 		} 
@@ -70,9 +74,25 @@ public class MyMenuController : MonoBehaviour {
 		
 			if(Input.GetMouseButtonUp(0))
 			{
-				this.currentState = ParticleOptions.DisplayConnections;
-				this.mainCanvasPrefab.SetActive(true);
-				
+				Debug.Log("setteing State back To none");
+				this.currentState = ParticleOptions.None;
+			}
+		}
+
+		//what we wonna do in middel mouse in hold down
+		else if (this.currentState == ParticleOptions.Lifteing) 
+		{
+		
+			var height = GetMousePos("Height");
+
+			if(height.HasValue && yLocked == true)
+			{
+				var heightY = ( height.Value.y - _particle.transform.position.y )  * Time.deltaTime ; 
+
+				Vector3 tempPos = new Vector3(_lastKownX, heightY, _lastKownZ);
+
+				Debug.Log("tempPos =" + tempPos);
+
 				_particle.transform.position = tempPos;
 			}
 
@@ -125,7 +145,7 @@ public class MyMenuController : MonoBehaviour {
 		{
 			if (hit.transform.CompareTag(tag))
 			{
-				Debug.Log("reteurned hit");
+				//Debug.Log("reteurned hit");
 					return hit;
 			}
 		}
@@ -148,7 +168,7 @@ public class MyMenuController : MonoBehaviour {
 			Debug.Log("GetMousePos retruned at null");
 			return null;
 		}
-		Debug.Log("mousepos" + hit.Value.point);
+		//Debug.Log("mousepos" + hit.Value.point);
 		return hit.Value.point;
 	}
 
