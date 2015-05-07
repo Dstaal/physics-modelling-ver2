@@ -49,7 +49,12 @@ public class MyParticle : MonoBehaviour {
 	public void Delete()
 	{		
 		if (this.gameObject != null) 
+		{
 			Destroy(this.gameObject, 0.01f);
+			targetParticleSystem.particles.Remove(this);
+			// add more lists to remove from if more list are added e.g. springs, atrecctions etc.
+		}
+
 	}
 
 

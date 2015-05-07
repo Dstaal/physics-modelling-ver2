@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 using System.Collections;
 
 public enum ParticleOptions
@@ -14,8 +15,10 @@ public enum ParticleOptions
 public class MyMenuController : MonoBehaviour {
 
 	public GameObject mainCanvasPrefab; 
+	public GameObject optionsCanvesPrefab;
 	public GameObject particleSystemPrefab;
 	public GameObject particlePrefab;
+	public GameObject nameFieldPrefab;
 
 	public ParticleOptions currentState = ParticleOptions.None;	
 
@@ -32,7 +35,7 @@ public class MyMenuController : MonoBehaviour {
 	// Use this for initialization
 	void Start () 
 	{
-	
+
 	}
 	
 	// Update is called once per frame
@@ -49,6 +52,7 @@ public class MyMenuController : MonoBehaviour {
 				{
 					this.currentState = ParticleOptions.Moving;
 					_particle = hitParticle;
+					_particle.pinned = true;
 
 				}
 			}
@@ -60,6 +64,7 @@ public class MyMenuController : MonoBehaviour {
 					this.currentState = ParticleOptions.Lifteing;
 					_particle = hitParticle;
 					yLocked = true;
+					_particle.pinned = true;
 				}
 			}
 		} 
@@ -74,8 +79,9 @@ public class MyMenuController : MonoBehaviour {
 		
 			if(Input.GetMouseButtonUp(0))
 			{
-				Debug.Log("setteing State back To none");
+				//Debug.Log("setteing State back To none");
 				this.currentState = ParticleOptions.None;
+				_particle.pinned = false;
 			}
 		}
 
@@ -92,16 +98,18 @@ public class MyMenuController : MonoBehaviour {
 
 				Vector3 tempPos = new Vector3(pos.x, heightY, pos.z);
 
-				Debug.Log("tempPos =" + tempPos);
+				//Debug.Log("tempPos =" + tempPos);
 
 				_particle.transform.position = tempPos;
+
 			}
 
 			if(Input.GetMouseButtonUp(2))
 			{
-				Debug.Log("setteing State back To none");
+				//Debug.Log("setteing State back To none");
 				this.currentState = ParticleOptions.None;
 				yLocked = false;
+				_particle.pinned = false;
 			}
 		}
 
@@ -109,13 +117,24 @@ public class MyMenuController : MonoBehaviour {
 		if(Input.GetMouseButtonUp(1) && this.currentState != ParticleOptions.DisplayConnections)
 		{
 			this.currentState = ParticleOptions.DisplayConnections;
-			this.mainCanvasPrefab.SetActive(true);
+			this.optionsCanvesPrefab.SetActive(true);
+			if (_particle != null)
+			{
+			
+			nameFieldPrefab.GetComponent<Text>().text = _particle.name.ToString();
+
+			Debug.Log("partciles name : "+ _particle.name);
+			}
+			if (_particle == null)
+			{
+				Debug.Log(" the dammed _partcile was null" );
+			}
 			//Add stuff here later
 		}
 		else if (Input.GetMouseButtonUp(1) && this.currentState == ParticleOptions.DisplayConnections)
 		{
 			this.currentState = ParticleOptions.None;
-			this.mainCanvasPrefab.SetActive(false);
+			this.optionsCanvesPrefab.SetActive(false);
 		}
 	}
 
@@ -134,6 +153,14 @@ public class MyMenuController : MonoBehaviour {
 		newParticle.Initialize(_particleSystem, _startMass, _startPosition,_startVelocity, false, 0);
 
 		// note  Initialize(MyParticleSystem parrnetParticleSystem, float startMass, Vector3 startPosition, Vector3 startVelocity, bool setPinned, float setLifeSpan) 
+	}
+
+	public void ClickDeleteParticle()
+	{
+		if (_particle != null)
+		{
+			_particle.Delete();
+		}
 	}
 
 	private RaycastHit? GetHitAtMousePos(string tag)
@@ -178,10 +205,10 @@ public class MyMenuController : MonoBehaviour {
 		var hit = GetHitAtMousePos ("Particle");
 		if(!hit.HasValue)
 		{
-			Debug.Log("GetPartcileAtpos retruned null ");
+			//Debug.Log("GetPartcileAtpos retruned null ");
 			return null;
 		}
-		Debug.Log("GetPartcileAtpos retruned after detecting a partcile" );
+		//Debug.Log("GetPartcileAtpos retruned after detecting a partcile" );
 		return hit.Value.transform.GetComponent<MyParticle> ();
 	}
 }

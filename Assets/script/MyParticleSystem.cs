@@ -11,7 +11,7 @@ public class MyParticleSystem : MonoBehaviour {
 	public List<MySpring> springs;
 	public List<MyAttraction> attractions;
 
-	private Vector3 _bounce = new Vector3 (0,0.1f,0);
+//	private Vector3 _bounce = new Vector3 (0,0.1f,0);
 
 
 	public MyParticleSystem Initialize(Vector3 startGravity, float startDrag) 
@@ -66,7 +66,7 @@ public class MyParticleSystem : MonoBehaviour {
 				if (particle.transform.position.y <= 0)
 				{
 					particle.ClearForce();
-					particle.AddForce(_bounce);
+					//particle.AddForce(_bounce);
 					// somehow need to set _bounce = to velocity
 				}
 			}
@@ -83,7 +83,6 @@ public class MyParticleSystem : MonoBehaviour {
 				particle.transform.position = particle.transform.position + particle.force;
 			}
 		}
-
 
 	}
 
