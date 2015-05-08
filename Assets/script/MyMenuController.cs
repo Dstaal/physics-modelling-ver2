@@ -18,7 +18,9 @@ public class MyMenuController : MonoBehaviour {
 	public GameObject optionsCanvesPrefab;
 	public GameObject particleSystemPrefab;
 	public GameObject particlePrefab;
+	//ui elemetns
 	public GameObject nameFieldPrefab;
+	public GameObject pinnedField;
 
 	public ParticleOptions currentState = ParticleOptions.None;	
 
@@ -52,7 +54,7 @@ public class MyMenuController : MonoBehaviour {
 				{
 					this.currentState = ParticleOptions.Moving;
 					_particle = hitParticle;
-					_particle.pinned = true;
+					_particle.tempPinned = true;
 
 				}
 			}
@@ -64,7 +66,7 @@ public class MyMenuController : MonoBehaviour {
 					this.currentState = ParticleOptions.Lifteing;
 					_particle = hitParticle;
 					yLocked = true;
-					_particle.pinned = true;
+					_particle.tempPinned = true;
 				}
 			}
 		} 
@@ -81,7 +83,7 @@ public class MyMenuController : MonoBehaviour {
 			{
 				//Debug.Log("setteing State back To none");
 				this.currentState = ParticleOptions.None;
-				_particle.pinned = false;
+				_particle.tempPinned = false;
 			}
 		}
 
@@ -109,7 +111,7 @@ public class MyMenuController : MonoBehaviour {
 				//Debug.Log("setteing State back To none");
 				this.currentState = ParticleOptions.None;
 				yLocked = false;
-				_particle.pinned = false;
+				_particle.tempPinned = false;
 			}
 		}
 
@@ -118,6 +120,7 @@ public class MyMenuController : MonoBehaviour {
 		{
 			this.currentState = ParticleOptions.DisplayConnections;
 			this.optionsCanvesPrefab.SetActive(true);
+			_particle.tempPinned = true;
 			if (_particle != null)
 			{
 			
@@ -135,6 +138,7 @@ public class MyMenuController : MonoBehaviour {
 		{
 			this.currentState = ParticleOptions.None;
 			this.optionsCanvesPrefab.SetActive(false);
+			_particle.tempPinned = false;
 		}
 	}
 
@@ -162,6 +166,24 @@ public class MyMenuController : MonoBehaviour {
 			_particle.Delete();
 		}
 	}
+
+	public void clickPineedBnt()
+	{
+	
+
+		if(_particle.pinned == false)
+		{
+			_particle.pinned= true;
+		}
+		else if (_particle.pinned == true)
+		{
+			_particle.pinned = false;
+		}
+		pinnedField.GetComponent<Text>().text = _particle.pinned.ToString();
+		_particle.SetPinned(_particle.pinned);
+		
+		Debug.Log("clickPinnedBnt called");
+	} 
 
 	private RaycastHit? GetHitAtMousePos(string tag)
 	{

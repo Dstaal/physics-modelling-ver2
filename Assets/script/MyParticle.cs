@@ -7,6 +7,7 @@ public class MyParticle : MonoBehaviour {
 	public float mass = 1;
 	public Vector3 position = Vector3.zero;
 	public Vector3 velocity = Vector3.zero;
+	public bool tempPinned = false;
 	public bool pinned = false;
 	public float lifespan = 0;
 	public float age = 0;
@@ -42,7 +43,7 @@ public class MyParticle : MonoBehaviour {
 
 	public void AddForce(Vector3 addedForce) 
 	{
-		if (!this.pinned) 
+		if (!this.tempPinned && !this.pinned) 
 			this.force += addedForce;
 	}
 
@@ -64,7 +65,6 @@ public class MyParticle : MonoBehaviour {
 		
 		if (this.pinned) 
 		{
-			//this.GetComponent<Rigidbody>().isKinematic = true;
 			this.GetComponent<Renderer>().material.SetColor("_Color", Color.red);
 		}
 		else {
