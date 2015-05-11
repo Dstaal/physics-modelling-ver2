@@ -21,11 +21,16 @@ public class MyMenuController : MonoBehaviour {
 	//ui elemetns
 	public GameObject nameFieldPrefab;
 	public GameObject pinnedField;
+	public GameObject targetOneField;
+	public GameObject targetTwoField;
 
 	public ParticleOptions currentState = ParticleOptions.None;	
 
 	private MyParticleSystem _particleSystem;
 	private MyParticle _particle;
+	private MyParticle targetOne;
+	private MyParticle targetTwo;
+
 	private Vector3 _startPosition = new Vector3(0,1,1);
 	private Vector3 _startVelocity = new Vector3(0,0,0);
 	private Vector3 _startGravity = new Vector3(0,-0.005f,0);
@@ -70,7 +75,7 @@ public class MyMenuController : MonoBehaviour {
 				}
 			}
 		} 
-		// what we wonna do theleft mouse bnt id hold down
+		// what we wonna do then left mouse bnt is hold down
 		else if (this.currentState == ParticleOptions.Moving) 
 		{
 			var pos = GetMousePos("Ground");
@@ -169,7 +174,7 @@ public class MyMenuController : MonoBehaviour {
 
 	public void clickPineedBnt()
 	{
-	
+	//toggling pinned on/off and updateing the text feild
 
 		if(_particle.pinned == false)
 		{
@@ -184,6 +189,30 @@ public class MyMenuController : MonoBehaviour {
 		
 		Debug.Log("clickPinnedBnt called");
 	} 
+
+	public void clickCreateSpring()
+	{
+
+		if (_particle != null)
+		{
+			//set the seleted particle as target one
+			targetOne = _particle;
+			targetOneField.GetComponent<Text>().text = targetOne.name.ToString();
+
+			if (_particle != null && targetOne != null)
+			{
+				// wait for the target two to be seleced.
+				if(Input.GetMouseButtonDown (0))
+				{
+				targetTwo = GetParticleAtPos ();
+					Debug.Log("trying to set targetTwo");
+				targetTwoField.GetComponent<Text>().text = targetOne.name.ToString();
+				}
+			}
+
+		}
+
+	}
 
 	private RaycastHit? GetHitAtMousePos(string tag)
 	{

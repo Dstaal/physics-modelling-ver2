@@ -38,8 +38,7 @@ public class MyParticleSystem : MonoBehaviour {
 
 		addGravity();
 		updateForces();
-		hitZero();
-	
+
 	}
 
 	private void addGravity() 
@@ -52,22 +51,6 @@ public class MyParticleSystem : MonoBehaviour {
 				{
 				Vector3 gravityForce = this.gravity * particle.mass;
 				particle.AddForce(gravityForce);
-				}
-			}
-		}
-	}
-
-	private void hitZero()
-	{
-		if (particles.Count > 0) 
-		{
-			foreach (MyParticle particle in particles) 
-			{
-				if (particle.transform.position.y <= 0)
-				{
-					particle.ClearForce();
-					//particle.AddForce(_bounce);
-					// somehow need to set _bounce = to velocity
 				}
 			}
 		}
