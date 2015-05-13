@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class MySpring : MonoBehaviour {
+public class MySpring  {
 	
 	public MyParticleSystem parnetParticleSystem { get; protected set; }
 
@@ -40,7 +40,7 @@ public class MySpring : MonoBehaviour {
 	}
 	
 	public void Delete() {
-		Destroy(this.gameObject, 0.01f);
+		//Destroy(this.gameObject, 0.01f);
 		parnetParticleSystem.springs.Remove(this);
 	}
 
