@@ -47,10 +47,14 @@ public class MyParticleSystem : MonoBehaviour {
 		{
 			foreach (MyParticle particle in particles) 
 			{
-				if (particle.transform.position.y > 0)
+				if (particle.transform.position.y > 0 )
 				{
 				Vector3 gravityForce = this.gravity * particle.mass;
 				particle.AddForce(gravityForce);
+				}
+				else if (particle.transform.position.y < 0)
+				{
+					particle.ClearForce();
 				}
 			}
 		}

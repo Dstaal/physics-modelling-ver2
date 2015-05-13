@@ -12,6 +12,13 @@ public enum ParticleOptions
 	DisplayConnections,
 }
 
+public enum springSelectionStage
+{
+	None,
+	selecting,
+	finalizing,
+}
+
 public class MyMenuController : MonoBehaviour {
 
 	public GameObject mainCanvasPrefab; 
@@ -25,6 +32,7 @@ public class MyMenuController : MonoBehaviour {
 	public GameObject targetTwoField;
 
 	public ParticleOptions currentState = ParticleOptions.None;	
+	public springSelectionStage currentSelectionStage = springSelectionStage.None;
 
 	private MyParticleSystem _particleSystem;
 	private MyParticle _particle;
@@ -75,7 +83,9 @@ public class MyMenuController : MonoBehaviour {
 				}
 			}
 		} 
-		// what we wonna do then left mouse bnt is hold down
+
+		// --- what we wonna do then left mouse bnt is hold down ---
+
 		else if (this.currentState == ParticleOptions.Moving) 
 		{
 			var pos = GetMousePos("Ground");
@@ -92,7 +102,8 @@ public class MyMenuController : MonoBehaviour {
 			}
 		}
 
-		//what we wonna do in middel mouse in hold down
+		// --- what we wonna do in middel mouse in hold down ---
+
 		else if (this.currentState == ParticleOptions.Lifteing) 
 		{
 		
@@ -120,7 +131,8 @@ public class MyMenuController : MonoBehaviour {
 			}
 		}
 
-		//toggleing the right mouse bnt
+		//--- toggleing the right mouse bnt ---
+
 		if(Input.GetMouseButtonUp(1) && this.currentState != ParticleOptions.DisplayConnections)
 		{
 			this.currentState = ParticleOptions.DisplayConnections;
@@ -135,15 +147,34 @@ public class MyMenuController : MonoBehaviour {
 			}
 			if (_particle == null)
 			{
-				Debug.Log(" the dammed _partcile was null" );
+				Debug.Log("_partcile was null" );
 			}
-			//Add stuff here later
+		
 		}
 		else if (Input.GetMouseButtonUp(1) && this.currentState == ParticleOptions.DisplayConnections)
 		{
 			this.currentState = ParticleOptions.None;
 			this.optionsCanvesPrefab.SetActive(false);
 			_particle.tempPinned = false;
+		}
+
+		//--- stages for spring selection -----
+
+
+		if (this.currentSelectionStage == springSelectionStage.selecting)
+		{
+			if (targetOne != null)
+			{
+				// wait for the target two to be seleced.
+				if(Input.GetMouseButtonDown (0))
+				{
+					targetTwo = GetParticleAtPos ();
+					Debug.Log("trying to set targetTwo");
+					targetTwoField.GetComponent<Text>().text = targetTwo.name.ToString();
+					targetTwo.GetComponent<Renderer>().material.SetColor("_Color", Color.green);
+					this.currentSelectionStage = springSelectionStage.finalizing;
+				}
+			}
 		}
 	}
 
@@ -198,18 +229,10 @@ public class MyMenuController : MonoBehaviour {
 			//set the seleted particle as target one
 			targetOne = _particle;
 			targetOneField.GetComponent<Text>().text = targetOne.name.ToString();
+			targetOne.GetComponent<Renderer>().material.SetColor("_Color", Color.green);
+			currentSelectionStage = springSelectionStage.selecting;
 
-			if (_particle != null && targetOne != null)
-			{
-				// wait for the target two to be seleced.
-				if(Input.GetMouseButtonDown (0))
-				{
-				targetTwo = GetParticleAtPos ();
-					Debug.Log("trying to set targetTwo");
-				targetTwoField.GetComponent<Text>().text = targetOne.name.ToString();
-				}
-			}
-
+			// the rest of the selection, is handin in the update - 
 		}
 
 	}
