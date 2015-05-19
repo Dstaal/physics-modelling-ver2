@@ -11,6 +11,8 @@ public class MySpring  {
 	public float strength = 1;
 	public float damping = 0;
 
+	public LineRenderer lineRender;
+
 //	public abstract void UpdateGizmos();
 
 	public MySpring(MyParticleSystem parnetParticleSystem, MyParticle targetOne, MyParticle targetTwo, float restLength, float strength, float damping) 
@@ -32,15 +34,23 @@ public class MySpring  {
 		this.rest = restLength;
 		this.strength = strength;
 		this.damping = damping;
+
+		lineRender = targetOne.gameObject.AddComponent<LineRenderer>();
+		lineRender.material  = new Material(Shader.Find("Particles/Additive"));
+		lineRender.SetWidth(0.2F, 0.2F);
+
 	}
 
-	public void UpdateGizmos() {
-		Gizmos.color = Color.yellow;
-		Gizmos.DrawLine(targetOne.transform.parent.transform.position + targetOne.position, targetTwo.transform.parent.transform.position + targetTwo.position);
+	public void drawLines()
+	{
+		lineRender.SetPosition(0, targetOne.transform.position);
+		lineRender.SetPosition(1, targetTwo.transform.position);
 	}
 	
+
 	public void Delete() {
 		//Destroy(this.gameObject, 0.01f);
+		//Debug.Log("spring.delete was called " );
 		parnetParticleSystem.springs.Remove(this);
 	}
 

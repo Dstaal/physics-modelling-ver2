@@ -12,14 +12,9 @@ public enum ParticleOptions
 	DisplayConnections,
 }
 
-public enum springSelectionStage
-{
-	None,
-	selecting,
-	finalizing,
-}
-
 public class MyMenuController : MonoBehaviour {
+
+	public SpringOptions springObt;
 
 	public GameObject mainCanvasPrefab; 
 	public GameObject optionsCanvesPrefab;
@@ -28,31 +23,30 @@ public class MyMenuController : MonoBehaviour {
 	//ui elemetns
 	public GameObject nameFieldPrefab;
 	public GameObject pinnedField;
-	public GameObject targetOneField;
-	public GameObject targetTwoField;
 
 	public ParticleOptions currentState = ParticleOptions.None;	
-	public springSelectionStage currentSelectionStage = springSelectionStage.None;
-
-	private MyParticleSystem _particleSystem;
-	private MyParticle _particle;
-	private MyParticle targetOne;
-	private MyParticle targetTwo;
+	
+	public MyParticleSystem myParticleSystem;
+	public MyParticle particle;
+	public MyParticle targetOne;
+	public MyParticle targetTwo;
 
 	private Vector3 _startPosition = new Vector3(0,1,1);
 	private Vector3 _startVelocity = new Vector3(0,0,0);
 	private Vector3 _startGravity = new Vector3(0,-0.005f,0);
+
 	private float _startMass = 1;
 	private float _startDrag = 1;
+
 	private bool yLocked = false;
 	private float middleMouseClickAdjust = 1 ;
 
-	// Use this for initialization
-	void Start () 
-	{
-
+	void Start () {
+		
+		springObt = this.gameObject.GetComponent<SpringOptions>();
+		
 	}
-	
+
 	// Update is called once per frame
 	void Update () 
 	{
@@ -66,8 +60,8 @@ public class MyMenuController : MonoBehaviour {
 				if (hitParticle != null) 
 				{
 					this.currentState = ParticleOptions.Moving;
-					_particle = hitParticle;
-					_particle.tempPinned = true;
+					particle = hitParticle;
+					particle.tempPinned = true;
 
 				}
 			}
@@ -77,9 +71,9 @@ public class MyMenuController : MonoBehaviour {
 				if (hitParticle != null) 
 				{
 					this.currentState = ParticleOptions.Lifteing;
-					_particle = hitParticle;
+					particle = hitParticle;
 					yLocked = true;
-					_particle.tempPinned = true;
+					particle.tempPinned = true;
 				}
 			}
 		} 
@@ -91,14 +85,14 @@ public class MyMenuController : MonoBehaviour {
 			var pos = GetMousePos("Ground");
 			if(pos.HasValue)
 			{
-				_particle.transform.position = pos.Value;
+				particle.transform.position = pos.Value;
 			}
 		
 			if(Input.GetMouseButtonUp(0))
 			{
 				//Debug.Log("setteing State back To none");
 				this.currentState = ParticleOptions.None;
-				_particle.tempPinned = false;
+				particle.tempPinned = false;
 			}
 		}
 
@@ -111,14 +105,14 @@ public class MyMenuController : MonoBehaviour {
 
 			if(height.HasValue && yLocked == true)
 			{
-				var pos = _particle.transform.position;
+				var pos = particle.transform.position;
 				var heightY = ( height.Value.y - pos.y )  * Time.fixedDeltaTime + middleMouseClickAdjust  ; 
 
 				Vector3 tempPos = new Vector3(pos.x, heightY, pos.z);
 
 				//Debug.Log("tempPos =" + tempPos);
 
-				_particle.transform.position = tempPos;
+				particle.transform.position = tempPos;
 
 			}
 
@@ -127,7 +121,7 @@ public class MyMenuController : MonoBehaviour {
 				//Debug.Log("setteing State back To none");
 				this.currentState = ParticleOptions.None;
 				yLocked = false;
-				_particle.tempPinned = false;
+				particle.tempPinned = false;
 			}
 		}
 
@@ -137,15 +131,15 @@ public class MyMenuController : MonoBehaviour {
 		{
 			this.currentState = ParticleOptions.DisplayConnections;
 			this.optionsCanvesPrefab.SetActive(true);
-			_particle.tempPinned = true;
-			if (_particle != null)
+			particle.tempPinned = true;
+			if (particle != null)
 			{
 			
-			nameFieldPrefab.GetComponent<Text>().text = _particle.name.ToString();
+			nameFieldPrefab.GetComponent<Text>().text = particle.name.ToString();
 
-			Debug.Log("partciles name : "+ _particle.name);
+			Debug.Log("partciles name : "+ particle.name);
 			}
-			if (_particle == null)
+			if (particle == null)
 			{
 				Debug.Log("_partcile was null" );
 			}
@@ -155,51 +149,33 @@ public class MyMenuController : MonoBehaviour {
 		{
 			this.currentState = ParticleOptions.None;
 			this.optionsCanvesPrefab.SetActive(false);
-			_particle.tempPinned = false;
-		}
-
-		//--- stages for spring selection -----
-
-
-		if (this.currentSelectionStage == springSelectionStage.selecting)
-		{
-			if (targetOne != null)
-			{
-				// wait for the target two to be seleced.
-				if(Input.GetMouseButtonDown (0))
-				{
-					targetTwo = GetParticleAtPos ();
-					Debug.Log("trying to set targetTwo");
-					targetTwoField.GetComponent<Text>().text = targetTwo.name.ToString();
-					targetTwo.GetComponent<Renderer>().material.SetColor("_Color", Color.green);
-					this.currentSelectionStage = springSelectionStage.finalizing;
-				}
-			}
+			particle.tempPinned = false;
 		}
 	}
 
 
+
 	public void ClickNewParticle()
 	{
-		if (_particleSystem == null)
+		if (myParticleSystem == null)
 		{
 			var particleSystemGo = Instantiate(particleSystemPrefab) as GameObject; 
-			_particleSystem = particleSystemGo.GetComponent<MyParticleSystem>().Initialize(_startGravity, _startDrag);
+			myParticleSystem = particleSystemGo.GetComponent<MyParticleSystem>().Initialize(_startGravity, _startDrag);
 		}
 
 		var newParticlePrefab = Instantiate(particlePrefab) as GameObject;
 		var newParticle = newParticlePrefab.GetComponent<MyParticle>();
 		
-		newParticle.Initialize(_particleSystem, _startMass, _startPosition,_startVelocity, false, 0);
+		newParticle.Initialize(myParticleSystem, _startMass, _startPosition,_startVelocity, false, 0);
 
 		// note  Initialize(MyParticleSystem parrnetParticleSystem, float startMass, Vector3 startPosition, Vector3 startVelocity, bool setPinned, float setLifeSpan) 
 	}
 
 	public void ClickDeleteParticle()
 	{
-		if (_particle != null)
+		if (particle != null)
 		{
-			_particle.Delete();
+			particle.Delete();
 		}
 	}
 
@@ -207,37 +183,21 @@ public class MyMenuController : MonoBehaviour {
 	{
 	//toggling pinned on/off and updateing the text feild
 
-		if(_particle.pinned == false)
+		if(particle.pinned == false)
 		{
-			_particle.pinned= true;
+			particle.pinned= true;
 		}
-		else if (_particle.pinned == true)
+		else if (particle.pinned == true)
 		{
-			_particle.pinned = false;
+			particle.pinned = false;
 		}
-		pinnedField.GetComponent<Text>().text = _particle.pinned.ToString();
-		_particle.SetPinned(_particle.pinned);
+		pinnedField.GetComponent<Text>().text = particle.pinned.ToString();
+		particle.SetPinned(particle.pinned);
 		
 		Debug.Log("clickPinnedBnt called");
 	} 
 
-	public void clickCreateSpring()
-	{
-
-		if (_particle != null)
-		{
-			//set the seleted particle as target one
-			targetOne = _particle;
-			targetOneField.GetComponent<Text>().text = targetOne.name.ToString();
-			targetOne.GetComponent<Renderer>().material.SetColor("_Color", Color.green);
-			currentSelectionStage = springSelectionStage.selecting;
-
-			// the rest of the selection, is handin in the update - 
-		}
-
-	}
-
-	private RaycastHit? GetHitAtMousePos(string tag)
+	public RaycastHit? GetHitAtMousePos(string tag)
 	{
 
 		var ray = Camera.main.ScreenPointToRay (Input.mousePosition);
@@ -260,7 +220,7 @@ public class MyMenuController : MonoBehaviour {
 	//{ Vector3 = nullablePos.value;}
 
 
-	private Vector3? GetMousePos(string tag)
+	public Vector3? GetMousePos(string tag)
 	{
 
 		var hit = GetHitAtMousePos (tag);
@@ -273,7 +233,7 @@ public class MyMenuController : MonoBehaviour {
 		return hit.Value.point;
 	}
 
-	private MyParticle GetParticleAtPos()
+	public MyParticle GetParticleAtPos()
 	{
 
 		var hit = GetHitAtMousePos ("Particle");

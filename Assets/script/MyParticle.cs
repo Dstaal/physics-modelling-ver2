@@ -2,7 +2,9 @@
 using System.Collections;
 
 [RequireComponent(typeof(Collider))]
-public class MyParticle : MonoBehaviour {
+
+public class MyParticle : MonoBehaviour 
+{
 
 	public float mass = 1;
 	public Vector3 position = Vector3.zero;
@@ -51,8 +53,23 @@ public class MyParticle : MonoBehaviour {
 	{		
 		if (this.gameObject != null) 
 		{
+
+			if (targetParticleSystem.springs.Count > 0)
+			{
+				for (int i = targetParticleSystem.springs.Count - 1; i >= 0; i-- )
+				{
+					MySpring spring = targetParticleSystem.springs[i]; 
+
+						if ( this == spring.targetOne || this == spring.targetTwo)
+						{
+						spring.Delete();
+						}
+				}
+			}
+
 			Destroy(this.gameObject, 0.01f);
 			targetParticleSystem.particles.Remove(this);
+
 			// add more lists to remove from if more list are added e.g. springs, atrecctions etc.
 		}
 

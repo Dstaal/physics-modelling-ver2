@@ -2,7 +2,8 @@
 using System.Collections;
 using System.Collections.Generic;
 
-public class MyParticleSystem : MonoBehaviour {
+public class MyParticleSystem : MonoBehaviour 
+{
 
 
 	public Vector3 gravity = Vector3.zero;
@@ -38,6 +39,20 @@ public class MyParticleSystem : MonoBehaviour {
 
 		addGravity();
 		updateForces();
+		UpdateLines();
+
+	}
+
+
+	void UpdateLines()
+	{
+		if (springs.Count > 0)
+		{
+			foreach (MySpring spring in springs) 
+			{
+				spring.drawLines();
+			}
+		}
 
 	}
 
