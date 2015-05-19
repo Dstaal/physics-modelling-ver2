@@ -97,7 +97,7 @@ public class SpringOptions : MonoBehaviour {
 			springRest = restSlider.value;
 			springDamp = dampSlider.value;
 			
-			Debug.Log( "str = " + springStr + "rest :" + springRest + "damp : " + springDamp);
+			Debug.Log( "str = " + springStr + ",  rest :" + springRest + ",  damp : " + springDamp);
 			
 			addNewSpring(myMenu.myParticleSystem, myMenu.targetOne, myMenu.targetTwo,springStr, springRest, springDamp);
 			
