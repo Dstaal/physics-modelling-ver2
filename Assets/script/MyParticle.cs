@@ -7,7 +7,6 @@ public class MyParticle : MonoBehaviour
 {
 
 	public float mass = 1;
-	public Vector3 position = Vector3.zero;
 	public Vector3 velocity = Vector3.zero;
 	public bool tempPinned = false;
 	public bool pinned = false;
@@ -17,6 +16,11 @@ public class MyParticle : MonoBehaviour
 
 	public MyParticleSystem targetParticleSystem { get; private set; } // what going on here? getting ref to the partcile system?
 
+	public Vector3 position
+	{
+		get { return this.transform.position; }
+		set { this.transform.position = value; }
+	}
 
 	public MyParticle Initialize(MyParticleSystem parrnetParticleSystem, float startMass, Vector3 startPosition, Vector3 startVelocity, bool setPinned, float setLifeSpan) 
 	{

@@ -99,7 +99,7 @@ public class SpringOptions : MonoBehaviour {
 			
 			Debug.Log( "str = " + springStr + ",  rest :" + springRest + ",  damp : " + springDamp);
 			
-			addNewSpring(myMenu.myParticleSystem, myMenu.targetOne, myMenu.targetTwo,springStr, springRest, springDamp);
+			addNewSpring(myMenu.myParticleSystem, myMenu.targetOne, myMenu.targetTwo,springRest, springStr, springDamp);
 			
 			//Debug.Log(" spring added " + _particleSystem.springs);
 			

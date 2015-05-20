@@ -13,8 +13,6 @@ public class MySpring  {
 
 	public LineRenderer lineRender;
 
-//	public abstract void UpdateGizmos();
-
 	public MySpring(MyParticleSystem parnetParticleSystem, MyParticle targetOne, MyParticle targetTwo, float restLength, float strength, float damping) 
 	{
 		if (parnetParticleSystem == null)
