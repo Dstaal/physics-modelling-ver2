@@ -14,7 +14,7 @@ public class MyParticleSystem : MonoBehaviour
 	public List<MySpring> springs;
 	public List<MyAttraction> attractions;
 
-	public float SystemTime = 0f;
+	public float systemTime = 0f;
 
 	public List<PhaseSpace> currentPhaseSpace = new List<PhaseSpace>();
 
@@ -62,7 +62,7 @@ public class MyParticleSystem : MonoBehaviour
 			lastSample = Time.time;
 		}
 		
-		SystemTime += Time.fixedDeltaTime;
+		systemTime += Time.fixedDeltaTime;
 		//advanceParticlesAges(Time.fixedDeltaTime);
 	}
 
@@ -73,12 +73,12 @@ public class MyParticleSystem : MonoBehaviour
 			//killOldParticles(); //havn't made. snice my partcile don't have a lifespan
 
 
-			this.currentPhaseSpace = getPhaseSpaceState(); //still no useing it for anything
+			this.currentPhaseSpace = getPhaseSpaceState(); //still no useing it for anything / need to be passed inot evaluation step
 
-			List<PhaseSpace> newState = computeStateDerivate(); // should be put into ode4
+			List<PhaseSpace> newState = computeStateDerivate(); // add new sruff but  // should be put into ode4
 			this.currentPhaseSpace = newState; // this doesn't do anything?
 			
-			setPhaseSpace(newState);
+			setPhaseSpace(this.currentPhaseSpace);
 		}
 	}
 	/*  matlab avdance time to convert to c#
@@ -277,6 +277,71 @@ public class MyParticleSystem : MonoBehaviour
 
 
 	/* Phase Space State */
+
+	public List<Vector3> getParticlesPositions() 
+	{
+		if (particles.Count > 0) 
+		{
+			List<Vector3> _positions = new List<Vector3>();
+			
+			foreach (MyParticle _particle in particles) 
+			{
+				_positions.Add(_particle.position);
+			}
+			
+			return _positions;
+		}
+		else
+			return null;
+	}
+
+
+	
+	public List<Vector3> getParticlesVelocities() 
+	{
+		if (particles.Count > 0) 
+		{
+			List<Vector3> _velocities = new List<Vector3>();
+			
+			foreach (MyParticle _particle in particles) 
+			{
+				if (_particle.pinned)
+					_velocities.Add(Vector3.zero);
+				else
+					_velocities.Add(_particle.velocity);
+			}
+			
+			return _velocities;
+		}
+		else
+			return null;
+	}
+
+
+	
+	public List<Vector3> getParticlesAccelerations()
+	{
+		if (particles.Count > 0) 
+		{
+			List<Vector3> _accelerations = new List<Vector3>();
+			
+			foreach (MyParticle _particle in particles) 
+			{
+				Vector3 force = Vector3.zero;
+				if (!_particle.pinned)
+					force = _particle.force;
+				
+				_accelerations.Add(force/_particle.mass);
+			}
+			
+			return _accelerations;
+		}
+		else
+			return null;
+	}
+
+
+
 	private void setPhaseSpace(List<PhaseSpace> phaseSpace) 
 	{
 
@@ -329,24 +394,9 @@ public class MyParticleSystem : MonoBehaviour
 	{
 
 		List<PhaseSpace> _phaseSpace = new List<PhaseSpace>();
-		List<Vector3> _positions = new List<Vector3>();
-		List<Vector3> _velocities = new List<Vector3>();
 
-		if (particles.Count > 0) {
-			
-			foreach (MyParticle _particle in particles) 
-			{
-				_positions.Add(_particle.position);
-			}
-			
-			foreach (MyParticle _particle in particles) 
-			{
-				if (_particle.pinned)
-					_velocities.Add(Vector3.zero);
-				else
-					_velocities.Add(_particle.velocity);
-			}
-		}
+		List<Vector3> _positions = getParticlesPositions();
+		List<Vector3> _velocities = getParticlesVelocities();
 
 		if ((_positions == null || _velocities == null) || (_positions.Count != this.particles.Count || _velocities.Count != this.particles.Count)) {
 			Debug.LogWarning("ERROR: positions, velocities and Particles lists are not same length or null!!");
@@ -393,9 +443,14 @@ public class MyParticleSystem : MonoBehaviour
 */
 
 
-
 	// see the pdf page 56. quuestion about ode4. claims this is called 4 times by that.
-	private List<PhaseSpace> computeStateDerivate() 
+
+	//function state_derivative = compute_state_derivative ...
+	//(time , phase_space_state , Particle_System )
+
+	// so i supose i have to pass in tiem, parentsystem and phasestate too
+
+	private List<PhaseSpace> computeStateDerivate() //not sure time needed
 	{
 		List<PhaseSpace> stateDerivate = null;
 		
@@ -404,33 +459,27 @@ public class MyParticleSystem : MonoBehaviour
 
 			//the matlab code sets phaseSpace here before updateing forces.
 
-			updateAllForces(); //why is it here?
+			/*
+
+			The evaluation is initialized by transposing the state vector into a row30 vector
+
+			phase_space_state = phase_space_state (:) ’;
+
+			and inserting it (back) into the particle system
+
+			Particle_System . set_phase_space_state ( phase_space_state );
+
+			*/
+
+		//	this.setPhaseSpace(this.currentPhaseSpace); //added in atempt to fix the above // but sends the partilce flying into the air
+
+			updateAllForces(); 
 			
 			stateDerivate = new List<PhaseSpace>();
 
-			List<Vector3> _velocities = new List<Vector3>();
-			List<Vector3> _accelerations = new List<Vector3>();
+			List<Vector3> _velocities = getParticlesVelocities();
+			List<Vector3> _accelerations = getParticlesAccelerations();
 
-			if (particles.Count > 0) 
-			{
-				
-				foreach (MyParticle _particle in particles) 
-				{
-					if (_particle.pinned)
-						_velocities.Add(Vector3.zero);
-					else
-						_velocities.Add(_particle.velocity);
-				}
-				
-				foreach (MyParticle _particle in particles) 
-				{
-					Vector3 force = Vector3.zero;
-					if (!_particle.pinned)
-						force = _particle.force;
-					
-					_accelerations.Add(force/_particle.mass);
-				}
-			}
 			
 			if ((_velocities == null || _accelerations == null) || (_velocities.Count != this.particles.Count || _accelerations.Count != this.particles.Count))
 			{
@@ -475,7 +524,7 @@ public class MyParticleSystem : MonoBehaviour
             %
             %   Copyright 2008-2008 buchholz.hs-bremen.de
             
-            phase_space_state = phase_space_state(:)';
+            phase_space_state = phase_space_state(:)';  
             
             Particle_System.set_phase_space_state (phase_space_state);
             
