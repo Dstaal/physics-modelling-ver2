@@ -76,7 +76,7 @@ public class MyParticleSystem : MonoBehaviour
 			this.currentPhaseSpace = getPhaseSpaceState(); //still no useing it for anything / need to be passed inot evaluation step
 
 			List<PhaseSpace> newState = computeStateDerivate(); // add new sruff but  // should be put into ode4
-			this.currentPhaseSpace = newState; // this doesn't do anything?
+			this.currentPhaseSpace = newState; // this doesn't do anything? // now it does, as we pass it in setPahseSpase below - but for not resaoen, other then we made the var 
 			
 			setPhaseSpace(this.currentPhaseSpace);
 		}
@@ -98,7 +98,7 @@ public class MyParticleSystem : MonoBehaviour
             time_start = Particle_System.time;
             time_end = time_start + step_time;
 
---------------- from here------------------
+--------------- from here ------------------
             
             phase_space_state = Particle_System.get_phase_space_state;
             
@@ -542,6 +542,7 @@ public class MyParticleSystem : MonoBehaviour
 
 
 //--------------------- runge kutta stuff below ----------------------
+
 	/*
 	 * 
 	 * matlab ode4 to convert to c#
