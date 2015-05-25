@@ -20,6 +20,7 @@ public class MyParticleSystem : MonoBehaviour
 
 	private float lastSample = 0f;
 
+	public delegate float func(float x, float y);
 
 	public MyParticleSystem Initialize(Vector3 startGravity, float startDrag) 
 	{
@@ -43,7 +44,7 @@ public class MyParticleSystem : MonoBehaviour
 	// Update is called once per frame
 	void Update () {
 
-	
+
 	}
 
 	void FixedUpdate () {
@@ -73,11 +74,24 @@ public class MyParticleSystem : MonoBehaviour
 
 
 			this.currentPhaseSpace = getPhaseSpaceState(); //still no useing it for anything / need to be passed inot evaluation step
-			this.currentPhaseSpace.ToString();
+
+			for (int i = 0; i < this.currentPhaseSpace.Count; i++) 
+			{
+				Debug.Log("phaseSpace nr : " + i + "  data : " + this.currentPhaseSpace[i]);
+			}
+
+			// hmm i thouth phaseSpace was supose to be one vector with all vaules.  but mine is making sevreal lists
+
 			List<PhaseSpace> newState = computeStateDerivate(); // add new sruff but  // should be put into ode4
 			this.currentPhaseSpace = newState; // this doesn't do anything? // now it does, as we pass it in setPahseSpase below - but for not resaoen, other then we made the var 
 			
 			setPhaseSpace(this.currentPhaseSpace);
+
+			for (int i = 0; i < newState.Count; i++) 
+			{
+				Debug.Log("newState nr : " + i + "  data : " + newState[i]);
+			}
+
 		}
 	}
 	/*  matlab avdance time to convert to c#
@@ -414,7 +428,6 @@ public class MyParticleSystem : MonoBehaviour
 				_phaseSpace[i].z_v = _velocities[i].z;
 			}
 		}
-		Debug.Log("getPahseSpace returned  : " + _phaseSpace);
 		return _phaseSpace;
 	}
 
@@ -450,7 +463,7 @@ public class MyParticleSystem : MonoBehaviour
 
 	// so i supose i have to pass in tiem, parentsystem and phasestate too
 
-	private List<PhaseSpace> computeStateDerivate() //not sure time needed
+	private List<PhaseSpace> computeStateDerivate() //not sure time needed // herein lays the problem
 	{
 		List<PhaseSpace> stateDerivate = null;
 		
@@ -473,7 +486,7 @@ public class MyParticleSystem : MonoBehaviour
 
 		//	this.setPhaseSpace(this.currentPhaseSpace); //added in atempt to fix the above // but sends the partilce flying into the air
 
-			updateAllForces(); 
+			updateAllForces(); // should this really update forces? i nkow the matlab does. but the pixar didn't
 			
 			stateDerivate = new List<PhaseSpace>();
 
@@ -499,52 +512,12 @@ public class MyParticleSystem : MonoBehaviour
 						
 						stateDerivate[i].x_v = _accelerations[i].x;
 						stateDerivate[i].y_v = _accelerations[i].y;
-						stateDerivate[i].z_v = _accelerations[i].z;
+						stateDerivate[i].z_v = _accelerations[i].z; // that are thise used for anyway? can see where they are used
 					}
 				}
 			}
 		}
 		return stateDerivate;
-	}
-
-
-	public void rungeKutta(PhaseSpace devState, PhaseSpace currentState, float tiemStep)
-	{
-		k1_x = tiemStep * currentState.x_v ;
-
-		k2_x = timeStep * currentState.x_v
-		/* runge-kutta form pdf page 7
-		 * 
-
-			h =  time step
-
-			k1 = h * f(x0, t0)
-
-			k2 = h * f(x0 + k1/2 , t0 + h/2)
-
-			k3 = h * f(x0 + k2/2 , t0 + h/2)
-
-			k4 = h * f(x0 + k3 , t0 + h)
-
-			x0(t0+h) = x0 + (1/6 * k1) + (1/3 * k2) +(1/3 * k3) +(1/6 * k4)
-
-
-The simplest numerical method is called Euler’s method. Let our initial value for x be denoted by
-x0 = x(t0) and our estimate of x at a later time t0 + h by x(t0 + h) where h is a stepsize parameter.
-Euler’s method simply computes x.t0 C h/ by taking a step in the derivative direction,
-x(t0 + h) = x0 + h x'(t0):
-
-x' = f(x,t)
-
-x'' = f/m
-
-v' = f/m
-
-x' = v
-
-which for me means 
-
-		*/
 	}
 
 	/*
@@ -579,6 +552,65 @@ which for me means
         end
 
 */
+
+
+	public float rungeKutta(PhaseSpace devState, PhaseSpace currentState, float startTime, float endTime, func func)
+	{
+		// atm asuming its worknig only doing ode4 in x.pos
+
+		float stepTime = endTime - startTime;
+
+		float x0 = currentState.x;
+
+		float t0 = startTime; 
+
+		float k1_x = stepTime * func(x0, t0);
+
+		float k2_x = stepTime * func(x0 + (k1_x/2), t0 + (stepTime/2));
+
+		float k3_x = stepTime * func(x0 + (k2_x/2), t0 + (stepTime/2));
+
+		float k4_x = stepTime * func(x0 + k3_x, t0 + stepTime);
+
+		float rk_x = x0 + (1/6 * k1_x) + (1/3 * k2_x) +(1/3 * k3_x) +(1/6 * k4_x);
+
+		return rk_x;
+
+		/* runge-kutta form pdf page 7
+		 * 
+
+			h =  time step
+
+			k1 = h * f(x0, t0)
+
+			k2 = h * f(x0 + k1/2 , t0 + h/2)
+
+			k3 = h * f(x0 + k2/2 , t0 + h/2)
+
+			k4 = h * f(x0 + k3 , t0 + h)
+
+			x0(t0+h) = x0 + (1/6 * k1) + (1/3 * k2) +(1/3 * k3) +(1/6 * k4)
+
+
+The simplest numerical method is called Euler’s method. Let our initial value for x be denoted by
+x0 = x(t0) and our estimate of x at a later time t0 + h by x(t0 + h) where h is a stepsize parameter.
+Euler’s method simply computes x.t0 C h/ by taking a step in the derivative direction,
+x(t0 + h) = x0 + h x'(t0):
+
+x' = f(x,t)
+
+x'' = f/m
+
+v' = f/m
+
+x' = v
+
+which for me means 
+
+		*/
+	}
+
+
 
 
 //--------------------- runge kutta stuff below ----------------------
@@ -652,13 +684,11 @@ which for me means
                     ti = tspan(i-1);
                     hi = h(i-1);
                     yi = Y(:,i-1);
-                    F(:,1) = feval(odefun,ti,yi,varargin{:});
-                    F(:,1) = feval(devState,timeStep,phaseSpace,varargin{:});
-                    
-                    F(:,2) = feval(odefun,ti+0.5*hi,yi+0.5*hi*F(:,1),varargin{:});
-                    F(:,3) = feval(odefun,ti+0.5*hi,yi+0.5*hi*F(:,2),varargin{:});
-                    F(:,4) = feval(odefun,tspan(i),yi+hi*F(:,3),varargin{:});
-                    Y(:,i) = yi + (hi/6)*(F(:,1) + 2*F(:,2) + 2*F(:,3) + F(:,4));
+                    F(:,1) = feval(odefun,ti,yi,varargin{:});				                    F(:,1) = feval(devState,ti,phaseSpace,particleSystem); // what it's equl to in my code
+                    F(:,2) = feval(odefun,ti+0.5*hi,yi+0.5*hi*F(:,1),varargin{:});				F(:,2) = feval(devState,ti+0.5*hi,phaseSpace+0.5*hi*F(:,1),particleSystem{:});
+                    F(:,3) = feval(odefun,ti+0.5*hi,yi+0.5*hi*F(:,2),varargin{:});				F(:,3) = feval(devState,ti+0.5*hi,phaseSpace+0.5*hi*F(:,2),particleSystem{:});
+                    F(:,4) = feval(odefun,tspan(i),yi+hi*F(:,3),varargin{:});					F(:,4) = feval(devState,tspan(i),yi+hi*F(:,3),particleSystem{:});
+                    Y(:,i) = yi + (hi/6)*(F(:,1) + 2*F(:,2) + 2*F(:,3) + F(:,4));				 Y(:,i) = yi + (hi/6)*(F(:,1) + 2*F(:,2) + 2*F(:,3) + F(:,4));
                 end
                 Y = Y.';
                 
@@ -696,7 +726,9 @@ class Runge{
           double t,w,k1,k2,k3,k4;
         t=a;
         w=value;
-        for(int i=0;i<(b-a)/step;i++){
+        
+        for(int i=0;i<(b-a)/step;i++)
+        {
             k1=step*f(t,w);
             k2=step*f(t+step/2,w+k1/2);
             k3=step*f(t+step/2,w+k2/2);
@@ -704,7 +736,7 @@ class Runge{
             w=w+(k1+2*k2+2*k3+k4)/6;
             t=a+i*step;
             Console.WriteLine("{0} {1} ",t,w);
-           }
+       }
     }
 }
 class Test
