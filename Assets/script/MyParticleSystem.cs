@@ -44,7 +44,6 @@ public class MyParticleSystem : MonoBehaviour
 	void Update () {
 
 	
-
 	}
 
 	void FixedUpdate () {
@@ -74,7 +73,7 @@ public class MyParticleSystem : MonoBehaviour
 
 
 			this.currentPhaseSpace = getPhaseSpaceState(); //still no useing it for anything / need to be passed inot evaluation step
-
+			this.currentPhaseSpace.ToString();
 			List<PhaseSpace> newState = computeStateDerivate(); // add new sruff but  // should be put into ode4
 			this.currentPhaseSpace = newState; // this doesn't do anything? // now it does, as we pass it in setPahseSpase below - but for not resaoen, other then we made the var 
 			
@@ -183,21 +182,20 @@ public class MyParticleSystem : MonoBehaviour
 			foreach (MySpring spring in springs) 
 			{
 
-				Vector3 springCenter = spring.targetTwo.position - spring.targetOne.position;
-				float springCenterNrm = springCenter.magnitude;
+				Vector3 position_delta = spring.targetTwo.position - spring.targetOne.position;
 
-				Debug.Log(" springCenter : " + springCenter );
-				
-				if (springCenterNrm < 1f) 
+				float position_delta_Nrm = position_delta.magnitude; // magnitude the same a normlizing? nope. 
+
+				if (position_delta_Nrm < 1f)
 				{
-					springCenterNrm = 1f;
+					position_delta_Nrm = 1f;
 				}
 				
-				Vector3 springUnit = springCenter / springCenterNrm;
+				Vector3 position_delta_unit = position_delta / position_delta_Nrm; // so here im normalixing. but a few steps later then matlab koden
 				
-				Vector3 springForce = spring.strength * springUnit * (springCenterNrm - spring.rest);
+				Vector3 springForce = spring.strength * position_delta_unit * (position_delta_Nrm - spring.rest);
 
-				Debug.Log("springforce : " + springForce);
+				//Debug.Log("springforce : " + springForce);
 
 				spring.targetOne.AddForce(springForce);
 				spring.targetTwo.AddForce(-springForce);
@@ -206,7 +204,7 @@ public class MyParticleSystem : MonoBehaviour
 
 
 				// add ref to the pdf here:
-				Vector3 projectionVelocityDeltaOnPositionDelta = Vector3.Dot(springUnit, velocityDelta) * springUnit;
+				Vector3 projectionVelocityDeltaOnPositionDelta = Vector3.Dot(position_delta_unit, velocityDelta) * position_delta_unit;
 				Vector3 dampingForce = spring.damping * projectionVelocityDeltaOnPositionDelta;
 				
 				spring.targetOne.AddForce( dampingForce);
@@ -288,8 +286,10 @@ public class MyParticleSystem : MonoBehaviour
 			{
 				_positions.Add(_particle.position);
 			}
-			
+
+			//Debug.Log("getParticlesPos returned   : " + _positions);
 			return _positions;
+
 		}
 		else
 			return null;
@@ -310,7 +310,7 @@ public class MyParticleSystem : MonoBehaviour
 				else
 					_velocities.Add(_particle.velocity);
 			}
-			
+			//Debug.Log("getParticlesVols returned   : " + _velocities);
 			return _velocities;
 		}
 		else
@@ -414,7 +414,7 @@ public class MyParticleSystem : MonoBehaviour
 				_phaseSpace[i].z_v = _velocities[i].z;
 			}
 		}
-		
+		Debug.Log("getPahseSpace returned  : " + _phaseSpace);
 		return _phaseSpace;
 	}
 
@@ -505,6 +505,46 @@ public class MyParticleSystem : MonoBehaviour
 			}
 		}
 		return stateDerivate;
+	}
+
+
+	public void rungeKutta(PhaseSpace devState, PhaseSpace currentState, float tiemStep)
+	{
+		k1_x = tiemStep * currentState.x_v ;
+
+		k2_x = timeStep * currentState.x_v
+		/* runge-kutta form pdf page 7
+		 * 
+
+			h =  time step
+
+			k1 = h * f(x0, t0)
+
+			k2 = h * f(x0 + k1/2 , t0 + h/2)
+
+			k3 = h * f(x0 + k2/2 , t0 + h/2)
+
+			k4 = h * f(x0 + k3 , t0 + h)
+
+			x0(t0+h) = x0 + (1/6 * k1) + (1/3 * k2) +(1/3 * k3) +(1/6 * k4)
+
+
+The simplest numerical method is called Euler’s method. Let our initial value for x be denoted by
+x0 = x(t0) and our estimate of x at a later time t0 + h by x(t0 + h) where h is a stepsize parameter.
+Euler’s method simply computes x.t0 C h/ by taking a step in the derivative direction,
+x(t0 + h) = x0 + h x'(t0):
+
+x' = f(x,t)
+
+x'' = f/m
+
+v' = f/m
+
+x' = v
+
+which for me means 
+
+		*/
 	}
 
 	/*
@@ -613,6 +653,8 @@ public class MyParticleSystem : MonoBehaviour
                     hi = h(i-1);
                     yi = Y(:,i-1);
                     F(:,1) = feval(odefun,ti,yi,varargin{:});
+                    F(:,1) = feval(devState,timeStep,phaseSpace,varargin{:});
+                    
                     F(:,2) = feval(odefun,ti+0.5*hi,yi+0.5*hi*F(:,1),varargin{:});
                     F(:,3) = feval(odefun,ti+0.5*hi,yi+0.5*hi*F(:,2),varargin{:});
                     F(:,4) = feval(odefun,tspan(i),yi+hi*F(:,3),varargin{:});
@@ -623,6 +665,16 @@ public class MyParticleSystem : MonoBehaviour
             end
             
         end
+
+------ from the pdf -------------
+
+After a successful integration step, ode4 returns a state matrix, each row representing
+the state vector at one of the specified points of time. Since we already know the state
+vector at time_start (corresponding to the first row), we are only interested in the
+second row, featuring the state vector at the end of the time step
+phase_space_state = phase_space_states (2 ,:);   // does thise sounds like they only want the midway funtion?
+
+
 --------------------------- an other runge kutta made for c#
 
 http://csharpcomputing.com/tutorials/Lesson16.htm
