@@ -137,10 +137,12 @@ public class MyParticleSystem : MonoBehaviour
 
 	private void updateAllForces()
 	{
+		clearSysForces();
 
-		updateForces();
+		// updateForces(); // not during this here in the matlab
 		UpdateLines();
 		updateSprings();
+		updateDrag();
 		addGravity();
 
 	}
@@ -170,7 +172,15 @@ public class MyParticleSystem : MonoBehaviour
 				}
 				else if (particle.transform.position.y < 0)
 				{
-					particle.ClearForce();
+
+					var pos = particle.transform.position;
+
+					var gourndLevel = 0;
+
+					Vector3 dontDropBelow = new Vector3(pos.x, gourndLevel, pos.z);
+
+					particle.transform.position = dontDropBelow; // is this the best way?
+
 				}
 			}
 		}
@@ -286,7 +296,56 @@ public class MyParticleSystem : MonoBehaviour
         end
 
 		*/
+	public void updateDrag()
+	{
+		if (particles.Count > 0)
+		{
+			foreach (MyParticle particle in particles)
+			{
+				Vector3 dragForce = - this.drag * particle.velocity;
 
+				particle.AddForce(dragForce);
+			}
+		}
+	}
+	/*
+
+  function aggregate_drag_forces (Particle_System)
+            %AGGREGATE_DRAG_FORCES  Aggregate drag forces.
+            %
+            %   Example
+            %
+            %   AGGREGATE_DRAG_FORCES (PS) aggregates the drag forces
+            %   in the particle system PS on all particles
+            %   in the corresponding particle force accumulators.
+            %
+            %   See also aggregate_forces, aggregate_attraction_forces, aggregate_gravity_forces,
+            %   aggregate_spring_forces.
+            
+            %   Copyright 2008-2008 buchholz.hs-bremen.de
+            
+            for i_particle = 1 : length (Particle_System.particles)
+                
+                Particle = Particle_System.particles(i_particle);
+                
+                drag_force = - Particle_System.drag*Particle.velocity;
+                
+                Particle.add_force (drag_force);
+                
+            end
+            
+        end
+
+*/
+
+	public void clearSysForces()
+	{
+		foreach (MyParticle _particle in particles) 
+		{
+			_particle.clearForce();
+		}
+
+	}
 
 	/* Phase Space State */
 

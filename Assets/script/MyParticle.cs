@@ -42,7 +42,7 @@ public class MyParticle : MonoBehaviour
 	}
 
 
-	public void ClearForce() 
+	public void clearForce() 
 	{
 		this.force = Vector3.zero;
 	}
