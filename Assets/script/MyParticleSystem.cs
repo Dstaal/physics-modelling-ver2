@@ -83,6 +83,7 @@ public class MyParticleSystem : MonoBehaviour
 			// hmm i thouth phaseSpace was supose to be one vector with all vaules.  but mine is making sevreal lists
 
 			List<PhaseSpace> newState = computeStateDerivate(); // add new sruff but  // should be put into ode4
+
 			this.currentPhaseSpace = newState; // this doesn't do anything? // now it does, as we pass it in setPahseSpase below - but for not resaoen, other then we made the var 
 			
 			setPhaseSpace(this.currentPhaseSpace);
@@ -210,7 +211,7 @@ public class MyParticleSystem : MonoBehaviour
 
 				float position_delta_Nrm = position_delta.magnitude; // magnitude the same a normlizing? nope. 
 
-				if (position_delta_Nrm < 1f)
+				if (position_delta_Nrm < 1f)  // and eps would be better then 1f 
 				{
 					position_delta_Nrm = 1f;
 				}
@@ -337,6 +338,79 @@ public class MyParticleSystem : MonoBehaviour
         end
 
 */
+
+	public void updateAttractions() //not in use yet
+	{
+		foreach (MyAttraction _attreaction in attractions) 
+		{
+
+			Vector3 position_delta = _attreaction.targetTwo.position - _attreaction.targetOne.position;
+			
+			float position_delta_Nrm = position_delta.magnitude; // magnitude the same a normlizing? nope. // this could be a problem, the matlabs is normalized
+			
+			if (position_delta_Nrm < _attreaction.minimumDistance)
+			{
+				position_delta_Nrm = _attreaction.minimumDistance; 
+			}
+
+			Vector3 _attreactionForce = _attreaction.strength * _attreaction.targetOne.mass * _attreaction.targetTwo.mass * position_delta / position_delta_Nrm / position_delta_Nrm / position_delta_Nrm; // why the hell  /position_delta_Nrm 3times?
+
+			_attreaction.targetOne.AddForce(_attreactionForce);
+			_attreaction.targetTwo.AddForce(_attreactionForce);
+			
+		}
+	}
+
+	/*
+	 *         function aggregate_attractions_forces (Particle_System)
+            %AGGREGATE_ATTRACTIONS_FORCES  Aggregate attraction forces.
+            %
+            %   Example
+            %
+            %   AGGREGATE_ATTRACTIONS_FORCES (PS) aggregates the forces of all
+            %   attractions in the particle system PS on all particles they are connected to
+            %   in the corresponding particle force accumulators.
+            %
+            %   See also aggregate_forces, aggregate_drag_forces, aggregate_gravity_forces,
+            %   aggregate_spring_forces.
+            
+            %   Copyright 2008-2008 buchholz.hs-bremen.de
+            
+            for i_attraction = 1 : length (Particle_System.attractions)
+                
+                Attraction = Particle_System.attractions(i_attraction);
+                
+                Particle_1 = Attraction.particle_1;
+                Particle_2 = Attraction.particle_2;
+                
+                position_delta = Particle_2.position - Particle_1.position;
+                
+                position_delta_norm = norm (position_delta);
+                
+                if position_delta_norm < Attraction.minimum_distance
+                    
+                    position_delta_norm = Attraction.minimum_distance;
+                    
+                end
+                
+                attraction_force = ...
+                    Attraction.strength* ...
+                    Particle_1.mass* ...
+                    Particle_2.mass* ...
+                    position_delta/ ...
+                    position_delta_norm/ ...
+                    position_delta_norm/ ...
+                    position_delta_norm;
+                
+                Particle_1.add_force (attraction_force);
+                Particle_2.add_force (-attraction_force);
+                
+            end
+            
+        end
+
+*/
+
 
 	public void clearSysForces()
 	{
@@ -545,7 +619,7 @@ public class MyParticleSystem : MonoBehaviour
 
 		//	this.setPhaseSpace(this.currentPhaseSpace); //added in atempt to fix the above // but sends the partilce flying into the air
 
-			updateAllForces(); // should this really update forces? i nkow the matlab does. but the pixar didn't
+			updateAllForces(); // should this really update forces? i nkow the matlab does. but the pixar didn't // maybe it a problem i don't have attractions yet
 			
 			stateDerivate = new List<PhaseSpace>();
 
@@ -563,7 +637,7 @@ public class MyParticleSystem : MonoBehaviour
 				{
 					if (this.particles[i] != null) 
 					{
-						stateDerivate.Add(new PhaseSpace());
+						stateDerivate.Add(new PhaseSpace()); 
 						
 						stateDerivate[i].x = _velocities[i].x;
 						stateDerivate[i].y = _velocities[i].y;
@@ -571,7 +645,7 @@ public class MyParticleSystem : MonoBehaviour
 						
 						stateDerivate[i].x_v = _accelerations[i].x;
 						stateDerivate[i].y_v = _accelerations[i].y;
-						stateDerivate[i].z_v = _accelerations[i].z; // that are thise used for anyway? can see where they are used
+						stateDerivate[i].z_v = _accelerations[i].z; // that are thise used for anyway? can see where they are used / now they are for drag
 					}
 				}
 			}
