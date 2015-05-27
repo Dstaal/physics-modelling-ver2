@@ -35,11 +35,11 @@ public class MyMenuController : MonoBehaviour {
 	private Vector3 _startVelocity = new Vector3(0,0,0);
 	private Vector3 _startGravity = new Vector3(0,-0.15f,0);
 
-	private float _startMass = 1;
-	private float _startDrag = 1;
+	private float _startMass = 1f;
+	private float _startDrag = 0f;
 
-	private bool yLocked = false;
-	private float middleMouseClickAdjust = 1 ;
+	private bool _yLocked = false;
+	private float _middleMouseClickAdjust = 1f;
 
 	void Start () {
 		
@@ -72,7 +72,7 @@ public class MyMenuController : MonoBehaviour {
 				{
 					this.currentState = ParticleOptions.Lifteing;
 					particle = hitParticle;
-					yLocked = true;
+					_yLocked = true;
 					particle.tempPinned = true;
 				}
 			}
@@ -86,6 +86,7 @@ public class MyMenuController : MonoBehaviour {
 			if(pos.HasValue)
 			{
 				particle.transform.position = pos.Value;
+                particle.velocity = pos.Value;
 			}
 		
 			if(Input.GetMouseButtonUp(0))
@@ -103,16 +104,17 @@ public class MyMenuController : MonoBehaviour {
 		
 			var height = GetMousePos("Height");
 
-			if(height.HasValue && yLocked == true)
+			if(height.HasValue && _yLocked == true)
 			{
 				var pos = particle.transform.position;
-				var heightY = ( height.Value.y - pos.y )  * Time.fixedDeltaTime + middleMouseClickAdjust  ; 
+				var heightY = ( height.Value.y - pos.y )  * Time.fixedDeltaTime + _middleMouseClickAdjust  ; 
 
 				Vector3 tempPos = new Vector3(pos.x, heightY, pos.z);
 
 				//Debug.Log("tempPos =" + tempPos);
 
 				particle.transform.position = tempPos;
+                particle.velocity = tempPos;
 
 			}
 
@@ -120,7 +122,7 @@ public class MyMenuController : MonoBehaviour {
 			{
 				//Debug.Log("setteing State back To none");
 				this.currentState = ParticleOptions.None;
-				yLocked = false;
+				_yLocked = false;
 				particle.tempPinned = false;
 			}
 		}

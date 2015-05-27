@@ -1,248 +1,297 @@
-﻿using UnityEngine;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
-public class MyParticleSystem : MonoBehaviour 
+public class MyParticleSystem : MonoBehaviour
 {
+    public Vector3 gravity = Vector3.zero;
+    public float drag = 0;
+    public float SamplingRate = 10f; // 10 ms
 
+    public List<MyParticle> particles;
+    public List<MySpring> springs;
+    public List<MyAttraction> attractions;
 
-	public Vector3 gravity = Vector3.zero;
-	public float drag = 0;
-	public float SamplingRate = 10f; // 10 ms 
+    public float systemTime = 0f;
 
-	public List<MyParticle> particles;
-	public List<MySpring> springs;
-	public List<MyAttraction> attractions;
+    public List<PhaseSpace> currentPhaseSpace = new List<PhaseSpace>();
 
-	public float systemTime = 0f;
+    private float lastSample = 0f;
 
-	public List<PhaseSpace> currentPhaseSpace = new List<PhaseSpace>();
+    public delegate float func(float x, float y);
 
-	private float lastSample = 0f;
+    public MyParticleSystem Initialize(Vector3 startGravity, float startDrag)
+    {
+        this.particles = new List<MyParticle>();
+        this.springs = new List<MySpring>();
+        this.attractions = new List<MyAttraction>();
 
-	public delegate float func(float x, float y);
+        this.gravity = startGravity;
+        this.drag = startDrag;
 
-	public MyParticleSystem Initialize(Vector3 startGravity, float startDrag) 
-	{
-		this.particles = new List<MyParticle>();
-		this.springs = new List<MySpring>();
-		this.attractions = new List<MyAttraction>();
+        //didn't add sampleing raet and system time. do i need those?
 
-		this.gravity = startGravity;
-		this.drag = startDrag;
+        return this;
+    }
 
-		//didn't add sampleing raet and system time. do i need those?
-				
-		return this;
-	}
+    // Use this for initialization
+    private void Start()
+    {
+    }
 
-	// Use this for initialization
-	void Start () {
-	
-	}
-	
-	// Update is called once per frame
-	void Update () {
+    // Update is called once per frame
+    private void Update()
+    {
+    }
 
+    private void FixedUpdate()
+    {
+        updateParticleSystemTime();
+    }
 
-	}
+    private void updateParticleSystemTime()
+    {
+        if (Time.time - lastSample > SamplingRate / 1000f)
+        {
+            float deltaTime = Time.time - lastSample;
+            advanceTime(deltaTime);
 
-	void FixedUpdate () {
-		updateParticleSystemTime();
-	}
+            lastSample = Time.time;
+        }
 
+        systemTime += Time.fixedDeltaTime;
+        //advanceParticlesAges(Time.fixedDeltaTime);
+    }
 
-	void updateParticleSystemTime() 
-	{
-		if (Time.time - lastSample > SamplingRate/1000f) 
-		{
-			float deltaTime = Time.time - lastSample;
-			advanceTime(deltaTime);
-			
-			lastSample = Time.time;
-		}
-		
-		systemTime += Time.fixedDeltaTime;
-		//advanceParticlesAges(Time.fixedDeltaTime);
-	}
+    private void advanceTime(float deltaTime)
+    {
+        // TODO: kill old particles
 
-	private void advanceTime(float deltaTime) 
-	{
-		if (this.currentPhaseSpace != null) 
-		{
-			//killOldParticles(); //havn't made. snice my partcile don't have a lifespan
+        var timeStart = systemTime;
+        var timeEnd = timeStart + deltaTime;
 
+        var phaseSpaceState = getPhaseSpaceState();
 
-			this.currentPhaseSpace = getPhaseSpaceState(); //still no useing it for anything / need to be passed inot evaluation step
+        var newState = computeStateDerivate2(phaseSpaceState);
+        this.setPhaseSpace(newState);
 
-			for (int i = 0; i < this.currentPhaseSpace.Count; i++) 
-			{
-				Debug.Log("phaseSpace nr : " + i + "  data : " + this.currentPhaseSpace[i]);
-			}
+        this.systemTime = timeEnd;
 
-			// hmm i thouth phaseSpace was supose to be one vector with all vaules.  but mine is making sevreal lists
+        // TODO: advance particle ages
 
-			List<PhaseSpace> newState = computeStateDerivate(); // add new sruff but  // should be put into ode4
+        //killOldParticles(); //havn't made. snice my partcile don't have a lifespan
 
-			this.currentPhaseSpace = newState; // this doesn't do anything? // now it does, as we pass it in setPahseSpase below - but for not resaoen, other then we made the var 
-			
-			setPhaseSpace(this.currentPhaseSpace);
+        //this.currentPhaseSpace = getPhaseSpaceState(); //still no useing it for anything / need to be passed inot evaluation step
 
-			for (int i = 0; i < newState.Count; i++) 
-			{
-				Debug.Log("newState nr : " + i + "  data : " + newState[i]);
-			}
+        //// hmm i thouth phaseSpace was supose to be one vector with all vaules.  but mine is making sevreal lists
 
-		}
-	}
-	/*  matlab avdance time to convert to c#
-	 * 
-	 *   function advance_time (Particle_System, step_time)
+        //List<PhaseSpace> newState = computeStateDerivate(this.currentPhaseSpace); // add new sruff but  // should be put into ode4
+
+        //this.currentPhaseSpace = newState; // this doesn't do anything? // now it does, as we pass it in setPahseSpase below - but for not resaoen, other then we made the var
+
+        //setPhaseSpace(this.currentPhaseSpace);
+
+        ////for (int i = 0; i < newState.Count; i++)
+        ////{
+        ////    Debug.Log("newState nr : " + i + "  data : " + newState[i]);
+        //}
+    }
+
+    private List<float> diff(List<float> list)
+    {
+        var diffed = new List<float>(list.Count);
+
+        for (int i = 1; i < list.Count; i++)
+        {
+            diffed[i] = list[i] - list[i - 1];
+        }
+
+        return diffed;
+    }
+
+    private List<PhaseSpace> computeStateDerivate2(List<PhaseSpace> spaceState)
+    {
+        this.setPhaseSpace(spaceState);
+
+        this.updateAllForces(); // aggregate forces
+
+        var velocities = this.getParticlesVelocities();
+        var accelerations = this.getParticlesAccelerations();
+
+        var stateDerivate = new List<PhaseSpace>(this.particles.Count);
+        for (int i = 0; i < this.particles.Count; i++)
+        {
+            var state = new PhaseSpace(velocities[i], accelerations[i]);
+            stateDerivate.Add(state);
+        }
+
+        return stateDerivate;
+    }
+
+    //private List<PhaseSpace> ode4(Action computeStateDerivate, List<float> tspan, List<PhaseSpace> phaseSpaceState)
+    //{
+    //    var y0 = phaseSpaceState;
+    //    var h = diff(tspan);
+    //    var f0 = computeStateDerivate2(y0);
+
+    //    var neq = y0.Count;
+    //    var N = tspan.Count;
+    //    var Y = new List<List<PhaseSpace>>(N);
+    //    var F = new List<List<PhaseSpace>>(4);
+
+    //    Y[0] = f0;
+    //    for (int i = 1; i < N; i++)
+    //    {
+    //        var ti = tspan[i - 1];
+    //        var hi = h[i - 1];
+    //        var yi = Y[i - 1];
+
+    //        F[0] = computeStateDerivate2(phaseSpaceState);
+
+    //        var yiAndAHalf = Utils.AddToEachElement(yi, 0.5f);
+    //        //var f1Ti = Utils.MultiplyEachElement(F[0], Utils.MultiplyEachElement(Utils.AddToEachElement(yi, 0.5f), hi));
+    //        //F[1] = computeStateDerivate2()
+    //    }
+    //}
+
+    /*  matlab avdance time to convert to c#
+     *
+     *   function advance_time (Particle_System, step_time)
             %ADVANCE_TIME  Advance particle system time.
             %
             %   Example
             %
             %   ADVANCE_TIME (PS, ST) increments the current time property
             %   of the particle system PS for step time ST.
-            
+
             %   Copyright 2008-2008 buchholz.hs-bremen.de
-            
+
             Particle_System.kill_old_particles;
-            
+
             time_start = Particle_System.time;
             time_end = time_start + step_time;
 
 --------------- from here ------------------
-            
+
             phase_space_state = Particle_System.get_phase_space_state;
-            
+
             phase_space_states = ode4 (...
                 @compute_state_derivative, ...
                 [time_start, time_end], ...
                 phase_space_state, ...
                 Particle_System);
-            
+
             phase_space_state = phase_space_states(2,:);
 
 --------------- to here, is whats missing in mine -----------------
 
-			Particle_System.set_phase_space_state (phase_space_state);
-            
+            Particle_System.set_phase_space_state (phase_space_state);
+
             Particle_System.time = time_end;
-            
+
             Particle_System.advance_particles_ages (step_time);
-            
+
             Particle_System.update_graphics_positions;
 
-	*/
+    */
 
-	private void updateAllForces()
-	{
-		clearSysForces();
+    private void updateAllForces()
+    {
+        clearSysForces();
 
-		// updateForces(); // not during this here in the matlab
-		UpdateLines();
-		updateSprings();
-		updateDrag();
-		addGravity();
+        // updateForces(); // not during this here in the matlab
+        UpdateLines();
+        updateSprings();
+        updateDrag();
+        addGravity();
+    }
 
-	}
+    private void UpdateLines()
+    {
+        if (springs.Count > 0)
+        {
+            foreach (MySpring spring in springs)
+            {
+                spring.drawLines();
+            }
+        }
+    }
 
-	private void UpdateLines()
-	{
-		if (springs.Count > 0)
-		{
-			foreach (MySpring spring in springs) 
-			{
-				spring.drawLines();
-			}
-		}
-		
-	}
+    private void addGravity()
+    {
+        //if (particles.Count > 0)
+        //{
+        //    foreach (MyParticle particle in particles)
+        //    {
+        //        if (particle.transform.position.y > 0)
+        //        {
+        //            Vector3 gravityForce = this.gravity * particle.mass;
+        //            particle.AddForce(gravityForce);
+        //        }
+        //        //else if (particle.transform.position.y < 0)
+        //        //{
+        //        //    var pos = particle.position;
 
-	private void addGravity() 
-	{
-		if (particles.Count > 0) 
-		{
-			foreach (MyParticle particle in particles) 
-			{
-				if (particle.transform.position.y > 0 )
-				{
-				Vector3 gravityForce = this.gravity * particle.mass;
-				particle.AddForce(gravityForce);
-				}
-				else if (particle.transform.position.y < 0)
-				{
+        //        //    var gourndLevel = 0;
 
-					var pos = particle.transform.position;
+        //        //    Vector3 dontDropBelow = new Vector3(pos.x, gourndLevel, pos.z);
 
-					var gourndLevel = 0;
+        //        //    particle.position = dontDropBelow; // is this the best way?
+        //        //}
+        //    }
+        //}
+    }
 
-					Vector3 dontDropBelow = new Vector3(pos.x, gourndLevel, pos.z);
+    //private void updateForces()
+    //{
+    //    if (particles.Count > 0)
+    //    {
+    //        foreach (MyParticle particle in particles)
+    //        {
+    //            particle.position = particle.position + particle.force;
+    //        }
+    //    }
+    //}
 
-					particle.transform.position = dontDropBelow; // is this the best way?
+    private void updateSprings()
+    {
+        if (springs.Count > 0)
+        {
+            foreach (MySpring spring in springs)
+            {
+                Vector3 position_delta = spring.targetTwo.position - spring.targetOne.position;
 
-				}
-			}
-		}
-	}
+                float position_delta_Nrm = position_delta.magnitude; // magnitude the same a normlizing? nope.
 
+                if (position_delta_Nrm < 1f)  // and eps would be better then 1f
+                {
+                    position_delta_Nrm = 1f;
+                }
 
-	private void updateForces()
-	{
-		if (particles.Count > 0)
-		{
-			foreach (MyParticle particle in particles)
-			{
-				particle.position = particle.position + particle.force;
-			}
-		}
+                Vector3 position_delta_unit = position_delta / position_delta_Nrm; // so here im normalixing. but a few steps later then matlab koden
 
-	}
+                Vector3 springForce = spring.strength * position_delta_unit * (position_delta_Nrm - spring.rest);
 
-	private void updateSprings()
-	{
-		if (springs.Count > 0) 
-		{
-			foreach (MySpring spring in springs) 
-			{
+                //Debug.Log("springforce : " + springForce);
 
-				Vector3 position_delta = spring.targetTwo.position - spring.targetOne.position;
+                spring.targetOne.AddForce(springForce);
+                spring.targetTwo.AddForce(-springForce);
 
-				float position_delta_Nrm = position_delta.magnitude; // magnitude the same a normlizing? nope. 
+                Vector3 velocityDelta = spring.targetTwo.velocity - spring.targetOne.velocity;
 
-				if (position_delta_Nrm < 1f)  // and eps would be better then 1f 
-				{
-					position_delta_Nrm = 1f;
-				}
-				
-				Vector3 position_delta_unit = position_delta / position_delta_Nrm; // so here im normalixing. but a few steps later then matlab koden
-				
-				Vector3 springForce = spring.strength * position_delta_unit * (position_delta_Nrm - spring.rest);
+                // add ref to the pdf here:
+                Vector3 projectionVelocityDeltaOnPositionDelta = Vector3.Dot(position_delta_unit, velocityDelta) * position_delta_unit;
+                Vector3 dampingForce = spring.damping * projectionVelocityDeltaOnPositionDelta;
 
-				//Debug.Log("springforce : " + springForce);
+                spring.targetOne.AddForce(dampingForce);
+                spring.targetTwo.AddForce(-dampingForce);
+            }
+        }
+    }
 
-				spring.targetOne.AddForce(springForce);
-				spring.targetTwo.AddForce(-springForce);
-
-				Vector3 velocityDelta = spring.targetTwo.velocity - spring.targetOne.velocity;
-
-
-				// add ref to the pdf here:
-				Vector3 projectionVelocityDeltaOnPositionDelta = Vector3.Dot(position_delta_unit, velocityDelta) * position_delta_unit;
-				Vector3 dampingForce = spring.damping * projectionVelocityDeltaOnPositionDelta;
-				
-				spring.targetOne.AddForce( dampingForce);
-				spring.targetTwo.AddForce(-dampingForce);
-
-			}
-		}
-	}
-
-	/*
-	 * 
-	 * 
-	 *  function aggregate_springs_forces (Particle_System)
+    /*
+     *
+     *
+     *  function aggregate_springs_forces (Particle_System)
             %AGGREGATE_SPRINGS_FORCES  Aggregate spring forces.
             %
             %   Example
@@ -253,63 +302,65 @@ public class MyParticleSystem : MonoBehaviour
             %
             %   See also aggregate_forces, aggregate_attraction_forces, aggregate_drag_forces,
             %   aggregate_gravity_forces.
-            
+
             %   Copyright 2008-2008 buchholz.hs-bremen.de
-            
+
             for i_spring = 1 : length (Particle_System.springs)
-                
+
                 Spring = Particle_System.springs(i_spring);
-                
+
                 Particle_1 = Spring.particle_1;
                 Particle_2 = Spring.particle_2;
-                
+
                 position_delta = Particle_2.position - Particle_1.position;
-                
+
                 position_delta_norm = norm (position_delta);
-                
+
                 % If the user makes the initial positions of two particles identical
                 % we have to avoid a "divide by zero" exception
                 if position_delta_norm < eps
-                    
+
                     position_delta_norm = eps;
-                    
+
                 end
-                
+
                 position_delta_unit = position_delta/position_delta_norm;
-                
+
                 spring_force = Spring.strength*position_delta_unit*(position_delta_norm - Spring.rest);
-                
+
                 Particle_1.add_force (spring_force);
                 Particle_2.add_force (-spring_force);
-                
+
                 velocity_delta = Particle_2.velocity - Particle_1.velocity;
-                
+
                 projection_velocity_delta_on_position_delta = ...
                     dot (position_delta_unit, velocity_delta)*position_delta_unit;
-                
+
                 damping_force = Spring.damping*projection_velocity_delta_on_position_delta;
-                
+
                 Particle_1.add_force (damping_force);
                 Particle_2.add_force (-damping_force);
-                
+
             end
-            
+
         end
 
-		*/
-	public void updateDrag()
-	{
-		if (particles.Count > 0)
-		{
-			foreach (MyParticle particle in particles)
-			{
-				Vector3 dragForce = - this.drag * particle.velocity;
+        */
 
-				particle.AddForce(dragForce);
-			}
-		}
-	}
-	/*
+    public void updateDrag()
+    {
+        if (particles.Count > 0)
+        {
+            foreach (MyParticle particle in particles)
+            {
+                Vector3 dragForce = - this.drag * particle.velocity;
+
+                particle.AddForce(dragForce);
+            }
+        }
+    }
+
+    /*
 
   function aggregate_drag_forces (Particle_System)
             %AGGREGATE_DRAG_FORCES  Aggregate drag forces.
@@ -322,47 +373,45 @@ public class MyParticleSystem : MonoBehaviour
             %
             %   See also aggregate_forces, aggregate_attraction_forces, aggregate_gravity_forces,
             %   aggregate_spring_forces.
-            
+
             %   Copyright 2008-2008 buchholz.hs-bremen.de
-            
+
             for i_particle = 1 : length (Particle_System.particles)
-                
+
                 Particle = Particle_System.particles(i_particle);
-                
+
                 drag_force = - Particle_System.drag*Particle.velocity;
-                
+
                 Particle.add_force (drag_force);
-                
+
             end
-            
+
         end
 
 */
 
-	public void updateAttractions() //not in use yet
-	{
-		foreach (MyAttraction _attreaction in attractions) 
-		{
+    public void updateAttractions() //not in use yet
+    {
+        foreach (MyAttraction _attreaction in attractions)
+        {
+            Vector3 position_delta = _attreaction.targetTwo.position - _attreaction.targetOne.position;
 
-			Vector3 position_delta = _attreaction.targetTwo.position - _attreaction.targetOne.position;
-			
-			float position_delta_Nrm = position_delta.magnitude; // magnitude the same a normlizing? nope. // this could be a problem, the matlabs is normalized
-			
-			if (position_delta_Nrm < _attreaction.minimumDistance)
-			{
-				position_delta_Nrm = _attreaction.minimumDistance; 
-			}
+            float position_delta_Nrm = position_delta.magnitude; // magnitude the same a normlizing? nope. // this could be a problem, the matlabs is normalized
 
-			Vector3 _attreactionForce = _attreaction.strength * _attreaction.targetOne.mass * _attreaction.targetTwo.mass * position_delta / position_delta_Nrm / position_delta_Nrm / position_delta_Nrm; // why the hell  /position_delta_Nrm 3times?
+            if (position_delta_Nrm < _attreaction.minimumDistance)
+            {
+                position_delta_Nrm = _attreaction.minimumDistance;
+            }
 
-			_attreaction.targetOne.AddForce(_attreactionForce);
-			_attreaction.targetTwo.AddForce(_attreactionForce);
-			
-		}
-	}
+            Vector3 _attreactionForce = _attreaction.strength * _attreaction.targetOne.mass * _attreaction.targetTwo.mass * position_delta / position_delta_Nrm / position_delta_Nrm / position_delta_Nrm; // why the hell  /position_delta_Nrm 3times?
 
-	/*
-	 *         function aggregate_attractions_forces (Particle_System)
+            _attreaction.targetOne.AddForce(_attreactionForce);
+            _attreaction.targetTwo.AddForce(_attreactionForce);
+        }
+    }
+
+    /*
+     *         function aggregate_attractions_forces (Particle_System)
             %AGGREGATE_ATTRACTIONS_FORCES  Aggregate attraction forces.
             %
             %   Example
@@ -373,26 +422,26 @@ public class MyParticleSystem : MonoBehaviour
             %
             %   See also aggregate_forces, aggregate_drag_forces, aggregate_gravity_forces,
             %   aggregate_spring_forces.
-            
+
             %   Copyright 2008-2008 buchholz.hs-bremen.de
-            
+
             for i_attraction = 1 : length (Particle_System.attractions)
-                
+
                 Attraction = Particle_System.attractions(i_attraction);
-                
+
                 Particle_1 = Attraction.particle_1;
                 Particle_2 = Attraction.particle_2;
-                
+
                 position_delta = Particle_2.position - Particle_1.position;
-                
+
                 position_delta_norm = norm (position_delta);
-                
+
                 if position_delta_norm < Attraction.minimum_distance
-                    
+
                     position_delta_norm = Attraction.minimum_distance;
-                    
+
                 end
-                
+
                 attraction_force = ...
                     Attraction.strength* ...
                     Particle_1.mass* ...
@@ -401,112 +450,100 @@ public class MyParticleSystem : MonoBehaviour
                     position_delta_norm/ ...
                     position_delta_norm/ ...
                     position_delta_norm;
-                
+
                 Particle_1.add_force (attraction_force);
                 Particle_2.add_force (-attraction_force);
-                
+
             end
-            
+
         end
 
 */
 
+    public void clearSysForces()
+    {
+        foreach (MyParticle particle in particles)
+        {
+            particle.clearForce();
+        }
+    }
 
-	public void clearSysForces()
-	{
-		foreach (MyParticle _particle in particles) 
-		{
-			_particle.clearForce();
-		}
+    /* Phase Space State */
 
-	}
+    public List<Vector3> getParticlesPositions()
+    {
+        if (particles.Count == 0)
+        {
+            return null;
+        }
 
-	/* Phase Space State */
+        List<Vector3> positions = new List<Vector3>(particles.Count);
+        for (int i = 0; i < particles.Count; i++)
+        {
+            positions.Add(particles[i].position);
+        }
 
-	public List<Vector3> getParticlesPositions() 
-	{
-		if (particles.Count > 0) 
-		{
-			List<Vector3> _positions = new List<Vector3>();
-			
-			foreach (MyParticle _particle in particles) 
-			{
-				_positions.Add(_particle.position);
-			}
+        return positions;
+    }
 
-			//Debug.Log("getParticlesPos returned   : " + _positions);
-			return _positions;
+    public List<Vector3> getParticlesVelocities()
+    {
+        if (particles.Count == 0)
+        {
+            return null;
+        }
 
-		}
-		else
-			return null;
-	}
+        List<Vector3> velocities = new List<Vector3>();
+        for (int i = 0; i < particles.Count; i++)
+        {
+            var particle = particles[i];
+            if (particle.pinned)
+                velocities.Add(Vector3.zero);
+            else
+                velocities.Add(particle.velocity);
+        }
 
+        return velocities;
+    }
 
-	
-	public List<Vector3> getParticlesVelocities() 
-	{
-		if (particles.Count > 0) 
-		{
-			List<Vector3> _velocities = new List<Vector3>();
-			
-			foreach (MyParticle _particle in particles) 
-			{
-				if (_particle.pinned)
-					_velocities.Add(Vector3.zero);
-				else
-					_velocities.Add(_particle.velocity);
-			}
-			//Debug.Log("getParticlesVols returned   : " + _velocities);
-			return _velocities;
-		}
-		else
-			return null;
-	}
+    public List<Vector3> getParticlesAccelerations()
+    {
+        if (particles.Count == 0)
+        {
+            return null;
+        }
 
+        List<Vector3> accelerations = new List<Vector3>();
+        foreach (MyParticle particle in particles)
+        {
+            Vector3 force = Vector3.zero;
+            if (!particle.pinned)
+                force = particle.force;
 
-	
-	public List<Vector3> getParticlesAccelerations()
-	{
-		if (particles.Count > 0) 
-		{
-			List<Vector3> _accelerations = new List<Vector3>();
-			
-			foreach (MyParticle _particle in particles) 
-			{
-				Vector3 force = Vector3.zero;
-				if (!_particle.pinned)
-					force = _particle.force;
-				
-				_accelerations.Add(force/_particle.mass);
-			}
-			
-			return _accelerations;
-		}
-		else
-			return null;
-	}
+            accelerations.Add(force / particle.mass);
+        }
 
+        return accelerations;
+    }
 
+    private void setPhaseSpace(List<PhaseSpace> phaseSpace)
+    {
+        if (particles.Count > 0)
+        {
+            for (int i = 0; i < particles.Count; i++)
+            {
+                MyParticle particle = this.particles[i];
 
-	private void setPhaseSpace(List<PhaseSpace> phaseSpace) 
-	{
+                // TODO: Should it plus ?
+                particle.position = new Vector3(phaseSpace[i].x, phaseSpace[i].y, phaseSpace[i].z);
+                particle.velocity = new Vector3(phaseSpace[i].x_v, phaseSpace[i].y_v, phaseSpace[i].z_v);
+            }
+        }
+    }
 
-		if (particles.Count > 0) 
-		{
-			for (int i = 0; i < particles.Count; i++) 
-			{
-				MyParticle particle = this.particles[i];
-				
-				particle.position += new Vector3(phaseSpace[i].x, phaseSpace[i].y, phaseSpace[i].z);
-				particle.velocity = new Vector3(phaseSpace[i].x_v, phaseSpace[i].y_v, phaseSpace[i].z_v);
-			}
-		}
-	}
-
-	/*
-	 * 
-	 *         function set_phase_space_state (Particle_System, phase_space_state)
+    /*
+     *
+     *         function set_phase_space_state (Particle_System, phase_space_state)
             %SET_PHASE_SPACE_STATE  Set phase space state vector.
             %
             %   Example
@@ -518,55 +555,55 @@ public class MyParticleSystem : MonoBehaviour
             %   See also get_phase_space_state.
             %
             %   Copyright 2008-2008 buchholz.hs-bremen.de
-            
+
             n_particles = length (Particle_System.particles);
-            
+
             for i_particle = 1 : n_particles
-                
+
                 Particle = Particle_System.particles(i_particle);
-                
+
                 Particle.position = ...
                     phase_space_state(3*i_particle - 2 : 3*i_particle);
-                
+
                 Particle.velocity = ...
                     phase_space_state(3*(i_particle + n_particles) - 2 : 3*(i_particle + n_particles));
-                
+
             end
-            
+
         end
-	 */
+     */
 
-	
-	private List<PhaseSpace> getPhaseSpaceState() 
-	{
+    private List<PhaseSpace> getPhaseSpaceState()
+    {
+        List<Vector3> positions = getParticlesPositions();
+        List<Vector3> velocities = getParticlesVelocities();
 
-		List<PhaseSpace> _phaseSpace = new List<PhaseSpace>();
+        if ((positions == null || velocities == null) || (positions.Count != this.particles.Count || velocities.Count != this.particles.Count))
+        {
+            Debug.LogWarning("ERROR: positions, velocities and Particles lists are not same length or null!!");
+            return null;
+        }
 
-		List<Vector3> _positions = getParticlesPositions();
-		List<Vector3> _velocities = getParticlesVelocities();
+        List<PhaseSpace> phaseSpace = new List<PhaseSpace>();
+        for (int i = 0; i < this.particles.Count; i++)
+        {
+            phaseSpace.Add(new PhaseSpace());
 
-		if ((_positions == null || _velocities == null) || (_positions.Count != this.particles.Count || _velocities.Count != this.particles.Count)) {
-			Debug.LogWarning("ERROR: positions, velocities and Particles lists are not same length or null!!");
-		}
-		else {
-			for (int i = 0; i < this.particles.Count; i++) {
-				_phaseSpace.Add(new PhaseSpace());
-				
-				_phaseSpace[i].x = _positions[i].x;
-				_phaseSpace[i].y = _positions[i].y;
-				_phaseSpace[i].z = _positions[i].z;
-				
-				_phaseSpace[i].x_v = _velocities[i].x;
-				_phaseSpace[i].y_v = _velocities[i].y;
-				_phaseSpace[i].z_v = _velocities[i].z;
-			}
-		}
-		return _phaseSpace;
-	}
+            phaseSpace[i].x = positions[i].x;
+            phaseSpace[i].y = positions[i].y;
+            phaseSpace[i].z = positions[i].z;
 
-	/*
-	 * 
-	 *        function phase_space_state = get_phase_space_state (Particle_System)
+            phaseSpace[i].x_v = velocities[i].x;
+            phaseSpace[i].y_v = velocities[i].y;
+            phaseSpace[i].z_v = velocities[i].z;
+        }
+
+        return phaseSpace;
+    }
+
+    /*
+     *
+     *        function phase_space_state = get_phase_space_state (Particle_System)
             %GET_PHASE_SPACE_STATE  Retrieve phase space state vector.
             %
             %   Example
@@ -578,83 +615,83 @@ public class MyParticleSystem : MonoBehaviour
             %   See also set_phase_space_state.
             %
             %   Copyright 2008-2008 buchholz.hs-bremen.de
-            
+
             positions = get_particles_positions (Particle_System);
             velocities = get_particles_velocities (Particle_System);
-            
+
             phase_space_state = [positions, velocities];
-            
+
         end
 
 */
 
+    // see the pdf page 56. quuestion about ode4. claims this is called 4 times by that.
 
-	// see the pdf page 56. quuestion about ode4. claims this is called 4 times by that.
+    //function state_derivative = compute_state_derivative ...
+    //(time , phase_space_state , Particle_System )
 
-	//function state_derivative = compute_state_derivative ...
-	//(time , phase_space_state , Particle_System )
+    // so i supose i have to pass in tiem, parentsystem and phasestate too
 
-	// so i supose i have to pass in tiem, parentsystem and phasestate too
+    //private List<PhaseSpace> computeStateDerivate(List<PhaseSpace> phaseSpaceStates) //not sure time needed // herein lays the problem
+    //{
+    //    List<PhaseSpace> stateDerivate = null;
 
-	private List<PhaseSpace> computeStateDerivate() //not sure time needed // herein lays the problem
-	{
-		List<PhaseSpace> stateDerivate = null;
-		
-		if (this.currentPhaseSpace != null) 
-		{
+    //    //if (this.currentPhaseSpace != null)
+    //    {
+    //        //the matlab code sets phaseSpace here before updateing forces.
 
-			//the matlab code sets phaseSpace here before updateing forces.
+    //        /*
 
-			/*
+    //        The evaluation is initialized by transposing the state vector into a row30 vector
 
-			The evaluation is initialized by transposing the state vector into a row30 vector
+    //        phase_space_state = phase_space_state (:) ’;
 
-			phase_space_state = phase_space_state (:) ’;
+    //        and inserting it (back) into the particle system
 
-			and inserting it (back) into the particle system
+    //        Particle_System . set_phase_space_state ( phase_space_state );
 
-			Particle_System . set_phase_space_state ( phase_space_state );
+    //        */
 
-			*/
+    //        //	this.setPhaseSpace(this.currentPhaseSpace); //added in atempt to fix the above // but sends the partilce flying into the air
 
-		//	this.setPhaseSpace(this.currentPhaseSpace); //added in atempt to fix the above // but sends the partilce flying into the air
+    //        this.setPhaseSpace(phaseSpaceStates);
 
-			updateAllForces(); // should this really update forces? i nkow the matlab does. but the pixar didn't // maybe it a problem i don't have attractions yet
-			
-			stateDerivate = new List<PhaseSpace>();
+    //        updateAllForces(); // should this really update forces? i nkow the matlab does. but the pixar didn't // maybe it a problem i don't have attractions yet
 
-			List<Vector3> _velocities = getParticlesVelocities();
-			List<Vector3> _accelerations = getParticlesAccelerations();
+    //        stateDerivate = new List<PhaseSpace>();
 
-			
-			if ((_velocities == null || _accelerations == null) || (_velocities.Count != this.particles.Count || _accelerations.Count != this.particles.Count))
-			{
-				Debug.LogWarning("ERROR: velocities, accelerations and Particles lists are not same length or null!!");
-			}
-			else 
-			{
-				for (int i = 0; i < this.particles.Count; i++) 
-				{
-					if (this.particles[i] != null) 
-					{
-						stateDerivate.Add(new PhaseSpace()); 
-						
-						stateDerivate[i].x = _velocities[i].x;
-						stateDerivate[i].y = _velocities[i].y;
-						stateDerivate[i].z = _velocities[i].z;
-						
-						stateDerivate[i].x_v = _accelerations[i].x;
-						stateDerivate[i].y_v = _accelerations[i].y;
-						stateDerivate[i].z_v = _accelerations[i].z; // that are thise used for anyway? can see where they are used / now they are for drag
-					}
-				}
-			}
-		}
-		return stateDerivate;
-	}
+    //        List<Vector3> _velocities = getParticlesVelocities();
+    //        List<Vector3> _accelerations = getParticlesAccelerations();
 
-	/*
-	 *   function state_derivative = compute_state_derivative ...
+    //        if ((_velocities == null || _accelerations == null) || (_velocities.Count != this.particles.Count || _accelerations.Count != this.particles.Count))
+    //        {
+    //            Debug.LogWarning("ERROR: velocities, accelerations and Particles lists are not same length or null!!");
+    //        }
+    //        else
+    //        {
+    //            for (int i = 0; i < this.particles.Count; i++)
+    //            {
+    //                if (this.particles[i] != null)
+    //                {
+    //                    stateDerivate.Add(new PhaseSpace());
+
+    //                    stateDerivate[i].x = _velocities[i].x;
+    //                    stateDerivate[i].y = _velocities[i].y;
+    //                    stateDerivate[i].z = _velocities[i].z;
+
+    //                    stateDerivate[i].x_v = _accelerations[i].x;
+    //                    stateDerivate[i].y_v = _accelerations[i].y;
+    //                    stateDerivate[i].z_v = _accelerations[i].z; // that are thise used for anyway? can see where they are used / now they are for drag
+    //                }
+    //            }
+    //        }
+    //    }
+
+    //    return stateDerivate;
+    //}
+
+    /*
+     *   function state_derivative = compute_state_derivative ...
                 (time, phase_space_state, Particle_System)
             %COMPUTE_STATE_DERIVATIVE  Compute state derivative vector.
             %
@@ -669,61 +706,59 @@ public class MyParticleSystem : MonoBehaviour
             %   get_particles_velocities, get_particles_accelerations.
             %
             %   Copyright 2008-2008 buchholz.hs-bremen.de
-            
-            phase_space_state = phase_space_state(:)';  
-            
+
+            phase_space_state = phase_space_state(:)';
+
             Particle_System.set_phase_space_state (phase_space_state);
-            
+
             Particle_System.aggregate_forces;
-            
+
             velocities = Particle_System.get_particles_velocities;
-            
+
             accelerations = Particle_System.get_particles_accelerations;
-            
+
             state_derivative = [velocities, accelerations]';
-            
+
         end
 
 */
 
+    public float rungeKutta(PhaseSpace devState, PhaseSpace currentState, float startTime, float endTime, func func)
+    {
+        // atm asuming its worknig only doing ode4 in x.pos
 
-	public float rungeKutta(PhaseSpace devState, PhaseSpace currentState, float startTime, float endTime, func func)
-	{
-		// atm asuming its worknig only doing ode4 in x.pos
+        float stepTime = endTime - startTime;
 
-		float stepTime = endTime - startTime;
+        float x0 = currentState.x;
 
-		float x0 = currentState.x;
+        float t0 = startTime;
 
-		float t0 = startTime; 
+        float k1_x = stepTime * func(x0, t0);
 
-		float k1_x = stepTime * func(x0, t0);
+        float k2_x = stepTime * func(x0 + (k1_x / 2), t0 + (stepTime / 2));
 
-		float k2_x = stepTime * func(x0 + (k1_x/2), t0 + (stepTime/2));
+        float k3_x = stepTime * func(x0 + (k2_x / 2), t0 + (stepTime / 2));
 
-		float k3_x = stepTime * func(x0 + (k2_x/2), t0 + (stepTime/2));
+        float k4_x = stepTime * func(x0 + k3_x, t0 + stepTime);
 
-		float k4_x = stepTime * func(x0 + k3_x, t0 + stepTime);
+        float rk_x = x0 + (1 / 6 * k1_x) + (1 / 3 * k2_x) + (1 / 3 * k3_x) + (1 / 6 * k4_x);
 
-		float rk_x = x0 + (1/6 * k1_x) + (1/3 * k2_x) +(1/3 * k3_x) +(1/6 * k4_x);
+        return rk_x;
 
-		return rk_x;
+        /* runge-kutta form pdf page 7
+         *
 
-		/* runge-kutta form pdf page 7
-		 * 
+            h =  time step
 
-			h =  time step
+            k1 = h * f(x0, t0)
 
-			k1 = h * f(x0, t0)
+            k2 = h * f(x0 + k1/2 , t0 + h/2)
 
-			k2 = h * f(x0 + k1/2 , t0 + h/2)
+            k3 = h * f(x0 + k2/2 , t0 + h/2)
 
-			k3 = h * f(x0 + k2/2 , t0 + h/2)
+            k4 = h * f(x0 + k3 , t0 + h)
 
-			k4 = h * f(x0 + k3 , t0 + h)
-
-			x0(t0+h) = x0 + (1/6 * k1) + (1/3 * k2) +(1/3 * k3) +(1/6 * k4)
-
+            x0(t0+h) = x0 + (1/6 * k1) + (1/3 * k2) +(1/3 * k3) +(1/6 * k4)
 
 The simplest numerical method is called Euler’s method. Let our initial value for x be denoted by
 x0 = x(t0) and our estimate of x at a later time t0 + h by x(t0 + h) where h is a stepsize parameter.
@@ -738,27 +773,24 @@ v' = f/m
 
 x' = v
 
-which for me means 
+which for me means
 
-		*/
-	}
+        */
+    }
 
+    //--------------------- runge kutta stuff below ----------------------
 
-
-
-//--------------------- runge kutta stuff below ----------------------
-
-	/*
-	 * 
-	 * matlab ode4 to convert to c#
-	 * 
-	 *  phase_space_states = ode4 (...
+    /*
+     *
+     * matlab ode4 to convert to c#
+     *
+     *  phase_space_states = ode4 (...
                 @compute_state_derivative, ...
                 [time_start, time_end], ...
                 phase_space_state, ...
                 Particle_System);
-	 * 
-	 * 
+     *
+     *
             function Y = ode4(odefun,tspan,y0,varargin)
                 %ODE4  Solve differential equations with a non-adaptive method of order 4.
                 %   Y = ODE4(ODEFUN,TSPAN,Y0) with TSPAN = [T1, T2, T3, ... TN] integrates
@@ -781,37 +813,37 @@ which for me means
                 %     solves the system y' = vdp1(t,y) with a constant step size of 0.1,
                 %     and plots the first component of the solution.
                 %
-                
+
                 if ~isnumeric(tspan)
                     error('TSPAN should be a vector of integration steps.');
                 end
-                
+
                 if ~isnumeric(y0)
                     error('Y0 should be a vector of initial conditions.');
                 end
-                
+
                 h = diff(tspan);
                 if any(sign(h(1))*h <= 0)
                     error('Entries of TSPAN are not in order.')
                 end
-                
+
                 try
                     f0 = feval(odefun,tspan(1),y0,varargin{:});
                 catch
                     msg = ['Unable to evaluate the ODEFUN at t0,y0. ',lasterr];
                     error(msg);
                 end
-                
+
                 y0 = y0(:);   % Make a column vector.
                 if ~isequal(size(y0),size(f0))
                     error('Inconsistent sizes of Y0 and f(t0,y0).');
                 end
-                
+
                 neq = length(y0);
                 N = length(tspan);
                 Y = zeros(neq,N);
                 F = zeros(neq,4);
-                
+
                 Y(:,1) = y0;
                 for i = 2:N
                     ti = tspan(i-1);
@@ -824,9 +856,9 @@ which for me means
                     Y(:,i) = yi + (hi/6)*(F(:,1) + 2*F(:,2) + 2*F(:,3) + F(:,4));				 Y(:,i) = yi + (hi/6)*(F(:,1) + 2*F(:,2) + 2*F(:,3) + F(:,4));
                 end
                 Y = Y.';
-                
+
             end
-            
+
         end
 
 ------ from the pdf -------------
@@ -836,7 +868,6 @@ the state vector at one of the specified points of time. Since we already know t
 vector at time_start (corresponding to the first row), we are only interested in the
 second row, featuring the state vector at the end of the time step
 phase_space_state = phase_space_states (2 ,:);   // does thise sounds like they only want the midway funtion?
-
 
 --------------------------- an other runge kutta made for c#
 
@@ -855,11 +886,11 @@ class Runge{
     public delegate double Function(double t,double y); //declare a delegate that takes a double and returns
 //double
     public static void runge(double a, double b,double value, double step, Function f)
-    { 
+    {
           double t,w,k1,k2,k3,k4;
         t=a;
         w=value;
-        
+
         for(int i=0;i<(b-a)/step;i++)
         {
             k1=step*f(t,w);
@@ -885,8 +916,6 @@ class Test
 }
  Runge-Kutta methods with a variable step size are often used in practice since they converge faster than fixed size methods.
 
-
-
 ---------------------- yet another ----------------------------------
 
 http://letsthinkabout.us/post/runge-kutta-in-c
@@ -894,25 +923,23 @@ http://letsthinkabout.us/post/runge-kutta-in-c
 public static class RungeKutta
 {
     public delegate double SmallRkDelegate(double x, double y);
-    
+
     static double sixth = 1.0 / 6.0;
-    
+
     public static double rk4(double x, double y, double dx, SmallRkDelegate f)
     {
         double halfdx = 0.5 * dx;
- 
+
         double k1 = dx * f(x, y);
         double k2 = dx * f(x + halfdx, y + k1 * halfdx);
         double k3 = dx * f(x + halfdx, y + k2 * halfdx);
         double k4 = dx * f(x + dx, y + k3 * dx);
- 
+
         return (y + sixth * (k1 + 2 * k2 + 2 * k3 + k4));
- 
     }
 }
 
-
 */
 
-	//end of class
+    //end of class
 }
