@@ -71,7 +71,7 @@ public class MyParticleSystem : MonoBehaviour
 
         var phaseSpaceState = getPhaseSpaceState();
 
-        var newState = computeStateDerivate2(phaseSpaceState);
+        var newState = computeStateDerivate(phaseSpaceState, deltaTime);
         this.setPhaseSpace(newState);
 
         this.systemTime = timeEnd;
@@ -108,24 +108,24 @@ public class MyParticleSystem : MonoBehaviour
         return diffed;
     }
 
-    private List<PhaseSpace> computeStateDerivate2(List<PhaseSpace> spaceState)
-    {
-        this.setPhaseSpace(spaceState);
+    //private List<PhaseSpace> computeStateDerivate2(List<PhaseSpace> spaceState)
+    //{
+    //   this.setPhaseSpace(spaceState);
 
-        this.updateAllForces(); // aggregate forces
+    //    this.updateAllForces(); // aggregate forces
 
-        var velocities = this.getParticlesVelocities();
-        var accelerations = this.getParticlesAccelerations();
+    //    var velocities = this.getParticlesVelocities();
+    //    var accelerations = this.getParticlesAccelerations(); // this is wrong. need some time
 
-        var stateDerivate = new List<PhaseSpace>(this.particles.Count);
-        for (int i = 0; i < this.particles.Count; i++)
-        {
-            var state = new PhaseSpace(velocities[i], accelerations[i]);
-            stateDerivate.Add(state);
-        }
+    //    var stateDerivate = new List<PhaseSpace>(this.particles.Count);
+    //    for (int i = 0; i < this.particles.Count; i++)
+    //    {
+    //        var state = new PhaseSpace(velocities[i], accelerations[i]);
+    //        stateDerivate.Add(state);
+    //    }
 
-        return stateDerivate;
-    }
+    //    return stateDerivate;
+    //}
 
     //private List<PhaseSpace> ode4(Action computeStateDerivate, List<float> tspan, List<PhaseSpace> phaseSpaceState)
     //{
@@ -535,8 +535,8 @@ public class MyParticleSystem : MonoBehaviour
                 MyParticle particle = this.particles[i];
 
                 // TODO: Should it plus ?
-                particle.position = new Vector3(phaseSpace[i].x, phaseSpace[i].y, phaseSpace[i].z);
-                particle.velocity = new Vector3(phaseSpace[i].x_v, phaseSpace[i].y_v, phaseSpace[i].z_v);
+                particle.position = new Vector3(phaseSpace[i].x, phaseSpace[i].y, phaseSpace[i].z); // this is wrong. 
+                particle.velocity = new Vector3(phaseSpace[i].dx, phaseSpace[i].dy, phaseSpace[i].dz); // this is wrong. 
             }
         }
     }
@@ -593,9 +593,9 @@ public class MyParticleSystem : MonoBehaviour
             phaseSpace[i].y = positions[i].y;
             phaseSpace[i].z = positions[i].z;
 
-            phaseSpace[i].x_v = velocities[i].x;
-            phaseSpace[i].y_v = velocities[i].y;
-            phaseSpace[i].z_v = velocities[i].z;
+            phaseSpace[i].dx = velocities[i].x;
+            phaseSpace[i].dy = velocities[i].y;
+            phaseSpace[i].dz = velocities[i].z;
         }
 
         return phaseSpace;
@@ -632,63 +632,64 @@ public class MyParticleSystem : MonoBehaviour
 
     // so i supose i have to pass in tiem, parentsystem and phasestate too
 
-    //private List<PhaseSpace> computeStateDerivate(List<PhaseSpace> phaseSpaceStates) //not sure time needed // herein lays the problem
-    //{
-    //    List<PhaseSpace> stateDerivate = null;
+    private List<PhaseSpace> computeStateDerivate(List<PhaseSpace> phaseSpaceStates, float deltaTime) //not sure time needed // herein lays the problem
+    {
+        List<PhaseSpace> stateDerivate = null;
 
-    //    //if (this.currentPhaseSpace != null)
-    //    {
-    //        //the matlab code sets phaseSpace here before updateing forces.
+        //if (this.currentPhaseSpace != null)
+        {
+            //the matlab code sets phaseSpace here before updateing forces.
 
-    //        /*
+            /*
 
-    //        The evaluation is initialized by transposing the state vector into a row30 vector
+            The evaluation is initialized by transposing the state vector into a row30 vector
 
-    //        phase_space_state = phase_space_state (:) ’;
+            phase_space_state = phase_space_state (:) ’;
 
-    //        and inserting it (back) into the particle system
+            and inserting it (back) into the particle system
 
-    //        Particle_System . set_phase_space_state ( phase_space_state );
+            Particle_System . set_phase_space_state ( phase_space_state );
 
-    //        */
+            */
 
-    //        //	this.setPhaseSpace(this.currentPhaseSpace); //added in atempt to fix the above // but sends the partilce flying into the air
+            //	this.setPhaseSpace(this.currentPhaseSpace); //added in atempt to fix the above // but sends the partilce flying into the air
 
-    //        this.setPhaseSpace(phaseSpaceStates);
+            //  this.setPhaseSpace(phaseSpaceStates);
 
-    //        updateAllForces(); // should this really update forces? i nkow the matlab does. but the pixar didn't // maybe it a problem i don't have attractions yet
+            updateAllForces(); // should this really update forces? i nkow the matlab does. but the pixar didn't // maybe it a problem i don't have attractions yet
 
-    //        stateDerivate = new List<PhaseSpace>();
+            stateDerivate = new List<PhaseSpace>();
 
-    //        List<Vector3> _velocities = getParticlesVelocities();
-    //        List<Vector3> _accelerations = getParticlesAccelerations();
+            List<Vector3> positions = getParticlesPositions();
+            List<Vector3> velocities = getParticlesVelocities();
+            List<Vector3> accelerations = getParticlesAccelerations();
 
-    //        if ((_velocities == null || _accelerations == null) || (_velocities.Count != this.particles.Count || _accelerations.Count != this.particles.Count))
-    //        {
-    //            Debug.LogWarning("ERROR: velocities, accelerations and Particles lists are not same length or null!!");
-    //        }
-    //        else
-    //        {
-    //            for (int i = 0; i < this.particles.Count; i++)
-    //            {
-    //                if (this.particles[i] != null)
-    //                {
-    //                    stateDerivate.Add(new PhaseSpace());
+            if ((velocities == null || accelerations == null) || (velocities.Count != this.particles.Count || accelerations.Count != this.particles.Count))
+            {
+                Debug.LogWarning("ERROR: velocities, accelerations and Particles lists are not same length or null!!");
+            }
+            else
+            {
+                for (int i = 0; i < this.particles.Count; i++)
+                {
+                    if (this.particles[i] != null)
+                    {
+                        stateDerivate.Add(new PhaseSpace());
 
-    //                    stateDerivate[i].x = _velocities[i].x;
-    //                    stateDerivate[i].y = _velocities[i].y;
-    //                    stateDerivate[i].z = _velocities[i].z;
+                        stateDerivate[i].x = positions[i].x + velocities[i].x * deltaTime;
+                        stateDerivate[i].y = positions[i].y + velocities[i].y * deltaTime;
+                        stateDerivate[i].z = positions[i].z + velocities[i].z * deltaTime;
 
-    //                    stateDerivate[i].x_v = _accelerations[i].x;
-    //                    stateDerivate[i].y_v = _accelerations[i].y;
-    //                    stateDerivate[i].z_v = _accelerations[i].z; // that are thise used for anyway? can see where they are used / now they are for drag
-    //                }
-    //            }
-    //        }
-    //    }
+                        stateDerivate[i].dx = velocities[i].x + accelerations[i].x * deltaTime;
+                        stateDerivate[i].dy = velocities[i].y + accelerations[i].y * deltaTime;
+                        stateDerivate[i].dz = velocities[i].z + accelerations[i].z * deltaTime; 
+                    }
+                }
+            }
+        }
 
-    //    return stateDerivate;
-    //}
+        return stateDerivate;
+    }
 
     /*
      *   function state_derivative = compute_state_derivative ...
