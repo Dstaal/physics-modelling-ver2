@@ -34,7 +34,7 @@ public class MyMenuController : MonoBehaviour
 
     private Vector3 _startPosition = new Vector3(0, 1, 1);
     private Vector3 _startVelocity = new Vector3(0, 0, 0);
-    private Vector3 _startGravity = new Vector3(0, -0.5f, 0);
+    private Vector3 _startGravity = new Vector3(0, -2.5f, 0);
 
     private float _startMass = 1f;
     private float _startDrag = 1f;
