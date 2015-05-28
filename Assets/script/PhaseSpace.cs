@@ -1,5 +1,4 @@
-﻿using UnityEngine;
-public class PhaseSpace : UnityEngine.Object
+﻿public class PhaseSpace : UnityEngine.Object
 {
     public float x { get; set; }
 
@@ -13,7 +12,6 @@ public class PhaseSpace : UnityEngine.Object
 
     public float dz { get; set; }
 
-
     public PhaseSpace()
     {
         this.x = 0f;
@@ -23,7 +21,6 @@ public class PhaseSpace : UnityEngine.Object
         this.dx = 0f;
         this.dy = 0f;
         this.dz = 0f;
-
     }
 
     //public PhaseSpace(float x, float y, float z, float x_v, float y_v, float z_v)
