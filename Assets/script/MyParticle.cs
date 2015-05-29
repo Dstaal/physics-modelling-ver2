@@ -3,7 +3,7 @@
 [RequireComponent(typeof(Collider))]
 public class MyParticle : MonoBehaviour
 {
-    public bool tempPinned = false;
+    
     public bool pinned = false;
     public float mass = 1;
     public float lifespan = 0;
@@ -44,7 +44,7 @@ public class MyParticle : MonoBehaviour
 
     public void AddForce(Vector3 addedForce)
     {
-        if (!this.tempPinned && !this.pinned)
+        if (!this.pinned)
             this.force += addedForce;
     }
 

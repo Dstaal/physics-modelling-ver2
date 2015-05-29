@@ -277,7 +277,7 @@ public class MyParticleSystem : MonoBehaviour
         for (int i = 0; i < particles.Count; i++)
         {
             var particle = particles[i];
-            if (particle.pinned || particle.tempPinned)
+            if (particle.pinned )
                 velocities.Add(Vector3.zero);
             else
                 velocities.Add(particle.velocity);
@@ -297,7 +297,7 @@ public class MyParticleSystem : MonoBehaviour
         foreach (MyParticle particle in particles)
         {
             Vector3 force = Vector3.zero;
-            if (!particle.pinned || !particle.tempPinned)
+            if (!particle.pinned )
                 force = particle.force;
 
             accelerations.Add(force / particle.mass);
