@@ -93,7 +93,6 @@ public class SpringOptions : MonoBehaviour
 
             addNewSpring(myMenu.myParticleSystem, myMenu.targetOne, myMenu.targetTwo, springRest, springStr, springDamp);
 
-            //Debug.Log(" spring added " + _particleSystem.springs);
 
             // change color unless they are pinne and thus red
             if (myMenu.targetOne.pinned == false)

@@ -60,10 +60,12 @@ public class MyParticle : MonoBehaviour
 
                     if (this == spring.targetOne || this == spring.targetTwo)
                     {
+                        spring.removeChildren();
                         spring.Delete();
                     }
                 }
             }
+
 
             Destroy(this.gameObject, 0.01f);
             targetParticleSystem.particles.Remove(this);
