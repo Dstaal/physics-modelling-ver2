@@ -83,13 +83,11 @@ public class SpringOptions : MonoBehaviour
         //if two targets create spring
         if (finalizeSpring == true && myMenu.targetOne != null && myMenu.targetTwo != null)
         {
-            Debug.Log("finalize was clicked");
+           
 
             springStr = strSlider.value;
             springRest = restSlider.value;
             springDamp = dampSlider.value;
-
-            Debug.Log("str = " + springStr + ",  rest :" + springRest + ",  damp : " + springDamp);
 
             addNewSpring(myMenu.myParticleSystem, myMenu.targetOne, myMenu.targetTwo, springRest, springStr, springDamp);
 
@@ -115,6 +113,9 @@ public class SpringOptions : MonoBehaviour
 
             //change the text on the bnt back to normal and eixt finalize stage
             addSpringBntFeild.GetComponent<Text>().text = ("Create spring");
+            targetOneField.GetComponent<Text>().text = (" ");
+            targetTwoField.GetComponent<Text>().text = (" ");
+
             this.currentSelectionStage = springSelectionStage.None;
             finalizeSpring = false;
         }
