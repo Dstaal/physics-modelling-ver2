@@ -11,6 +11,7 @@ public enum springSelectionStage
 public class SpringOptions : MonoBehaviour
 {
     public MyMenuController myMenu;
+    public AttractionOptions attOpt;
 
     public GameObject SpringsOptionsCanvesPrefab;
     public GameObject addSpringBntFeild;
@@ -25,12 +26,13 @@ public class SpringOptions : MonoBehaviour
     public GameObject strDisplay;
     public GameObject restDisplay;
 
+    public bool bSpringObt = false;
+
     private float springStr = 1;
     private float springRest = 1;
     private float springDamp = 1;
 
     private bool finalizeSpring = false;
-    private bool bSpringObt = false;
 
     public springSelectionStage currentSelectionStage = springSelectionStage.None;
 
@@ -38,6 +40,7 @@ public class SpringOptions : MonoBehaviour
     private void Start()
     {
         myMenu = this.gameObject.GetComponent<MyMenuController>();
+        attOpt = this.gameObject.GetComponent<AttractionOptions>();
     }
 
     // Update is called once per frame
@@ -83,14 +86,11 @@ public class SpringOptions : MonoBehaviour
         //if two targets create spring
         if (finalizeSpring == true && myMenu.targetOne != null && myMenu.targetTwo != null)
         {
-           
-
             springStr = strSlider.value;
             springRest = restSlider.value;
             springDamp = dampSlider.value;
 
             addNewSpring(myMenu.myParticleSystem, myMenu.targetOne, myMenu.targetTwo, springRest, springStr, springDamp);
-
 
             // change color unless they are pinne and thus red
             if (myMenu.targetOne.pinned == false)
@@ -99,7 +99,7 @@ public class SpringOptions : MonoBehaviour
             }
             else if (myMenu.targetOne.pinned == true)
             {
-                 myMenu.targetOne.GetComponent<Renderer>().material.SetColor("_Color", Color.red);
+                myMenu.targetOne.GetComponent<Renderer>().material.SetColor("_Color", Color.red);
             }
 
             if (myMenu.targetTwo.pinned == false)
@@ -133,6 +133,13 @@ public class SpringOptions : MonoBehaviour
         if (bSpringObt == false)
         {
             this.SpringsOptionsCanvesPrefab.SetActive(true);
+
+            if (attOpt.bAttractionObt == true)
+            {
+                attOpt.AttracionOptionsCanvesPrefab.SetActive(false);
+                attOpt.bAttractionObt = false;
+            }
+
             bSpringObt = true;
         }
         else if (bSpringObt == true)

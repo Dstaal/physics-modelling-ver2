@@ -1,11 +1,17 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 
-public enum ParticleOptions
+public enum MoveOptions
 {
     None,
     Moving,
     Lifteing,
+   
+}
+
+public enum ParticleOptions
+{
+    None,
     SpringSelection,
     AttractionSelection,
     DisplayConnections,
@@ -22,9 +28,12 @@ public class MyMenuController : MonoBehaviour
 
     //ui elemetns
     public GameObject nameFieldPrefab;
-
+    public GameObject massFieldValue;
     public GameObject pinnedField;
 
+    public Slider massSlider;
+
+    public MoveOptions currentMovemnet = MoveOptions.None;
     public ParticleOptions currentState = ParticleOptions.None;
 
     public MyParticleSystem myParticleSystem;
@@ -40,7 +49,6 @@ public class MyMenuController : MonoBehaviour
     private float _startDrag = 1f;
 
     private bool _yLocked = false;
-    private float _middleMouseClickAdjust = 1f;
 
     private void Start()
     {
@@ -50,16 +58,23 @@ public class MyMenuController : MonoBehaviour
     // Update is called once per frame
     private void Update()
     {
-        if (this.currentState == ParticleOptions.None)
+        //update seleceted particle name field
+        if (particle != null)
+        {
+            nameFieldPrefab.GetComponent<Text>().text = particle.name.ToString();
+
+        }
+
+        if (this.currentMovemnet == MoveOptions.None)
         {
             if (Input.GetMouseButtonDown(0))
             {
                 var hitParticle = GetParticleAtPos();
                 if (hitParticle != null)
                 {
-                    this.currentState = ParticleOptions.Moving;
+                    this.currentMovemnet = MoveOptions.Moving;
                     particle = hitParticle;
-                    particle.tempPinned = true;
+           
                 }
             }
             if (Input.GetMouseButtonDown(2))
@@ -67,16 +82,16 @@ public class MyMenuController : MonoBehaviour
                 var hitParticle = GetParticleAtPos();
                 if (hitParticle != null)
                 {
-                    this.currentState = ParticleOptions.Lifteing;
+                    this.currentMovemnet = MoveOptions.Lifteing;
                     particle = hitParticle;
                     _yLocked = true;
-                    particle.tempPinned = true;
+                
                 }
             }
         }
 
         // --- what we wonna do then left mouse bnt is hold down ---
-        else if (this.currentState == ParticleOptions.Moving)
+        else if (this.currentMovemnet == MoveOptions.Moving)
         {
             var pos = GetMousePos("Ground");
             if (pos.HasValue)
@@ -86,32 +101,33 @@ public class MyMenuController : MonoBehaviour
 
             if (Input.GetMouseButtonUp(0))
             {
-                this.currentState = ParticleOptions.None;
-                particle.tempPinned = false;
+                this.currentMovemnet = MoveOptions.None;
+       
             }
         }
 
         // --- what we wonna do in middel mouse in hold down ---
-        else if (this.currentState == ParticleOptions.Lifteing)
+        else if (this.currentMovemnet == MoveOptions.Lifteing)
         {
             var height = GetMousePos("Height");
 
             if (height.HasValue && _yLocked == true)
             {
                 var pos = particle.transform.position;
-                var heightY = (height.Value.y - pos.y) * Time.fixedDeltaTime + _middleMouseClickAdjust;
+
+                var heightY = (height.Value.y - pos.y + Screen.height/3) * Time.fixedDeltaTime ;
 
                 Vector3 tempPos = new Vector3(pos.x, heightY, pos.z);
 
                 particle.transform.position = tempPos;
-                particle.tempPinned = true;
+      
             }
 
             if (Input.GetMouseButtonUp(2))
             {
-                this.currentState = ParticleOptions.None;
+                this.currentMovemnet = MoveOptions.None;
                 _yLocked = false;
-                particle.tempPinned = false;
+      
             }
         }
 
@@ -121,23 +137,14 @@ public class MyMenuController : MonoBehaviour
         {
             this.currentState = ParticleOptions.DisplayConnections;
             this.optionsCanvesPrefab.SetActive(true);
-            particle.tempPinned = true;
-            if (particle != null)
-            {
-                nameFieldPrefab.GetComponent<Text>().text = particle.name.ToString();
+        
 
-                Debug.Log("partciles name : " + particle.name);
-            }
-            if (particle == null)
-            {
-                Debug.Log("_partcile was null");
-            }
         }
         else if (Input.GetMouseButtonUp(1) && this.currentState == ParticleOptions.DisplayConnections)
         {
             this.currentState = ParticleOptions.None;
             this.optionsCanvesPrefab.SetActive(false);
-            particle.tempPinned = false;
+         
         }
     }
 
@@ -195,11 +202,6 @@ public class MyMenuController : MonoBehaviour
         return null;
     }
 
-    //vector3? means it nullable
-    //exsample
-    //vector3? nullablePos = getPos(layermask.nameForLayer("particle"));
-    //if (nullablePos.HasValue)
-    //{ Vector3 = nullablePos.value;}
 
     public Vector3? GetMousePos(string tag)
     {
@@ -223,4 +225,11 @@ public class MyMenuController : MonoBehaviour
 
         return hit.Value.transform.GetComponent<MyParticle>();
     }
+
+    public void massSliderOnChange()
+    {
+        massFieldValue.GetComponent<Text>().text = massSlider.value.ToString();
+        _startMass = massSlider.value; 
+    }
+
 }

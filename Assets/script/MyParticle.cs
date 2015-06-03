@@ -31,6 +31,8 @@ public class MyParticle : MonoBehaviour
         this.lifespan = setLifeSpan;
         this.age = 0f;
 
+        this.transform.localScale = new Vector3(startMass, startMass, startMass);
+        
         this.transform.SetParent(this.targetParticleSystem.transform);
         this.name = "Particle " + this.targetParticleSystem.particles.IndexOf(this).ToString();
 
