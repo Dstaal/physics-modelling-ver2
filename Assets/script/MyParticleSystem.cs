@@ -84,6 +84,7 @@ public class MyParticleSystem : MonoBehaviour
 
         UpdateLines();
         updateSprings();
+        updateAttractions();
         updateDrag();
         addGravity();
     }
@@ -95,6 +96,14 @@ public class MyParticleSystem : MonoBehaviour
             foreach (MySpring spring in springs)
             {
                 spring.drawLines();
+            }
+        }
+
+        if (attractions.Count > 0)
+        {
+            foreach (MyAttraction attraction in attractions)
+            {
+                attraction.drawLines();
             }
         }
     }
@@ -118,7 +127,7 @@ public class MyParticleSystem : MonoBehaviour
 
                     Vector3 dontdropbelow = new Vector3(pos.x, gourndlevel, pos.z);
 
-                    particle.position = dontdropbelow; // is this the best way?
+                    particle.position = dontdropbelow; 
                 }
             }
         }
@@ -170,75 +179,36 @@ public class MyParticleSystem : MonoBehaviour
         }
     }
 
-    private void updateAttractions() //not in use yet
+    private void updateAttractions()
     {
-        foreach (MyAttraction _attreaction in attractions)
+        foreach (MyAttraction attreaction in attractions)
         {
-            Vector3 position_delta = _attreaction.targetTwo.position - _attreaction.targetOne.position;
+            Vector3 position_delta = attreaction.targetTwo.position - attreaction.targetOne.position;
 
-            float position_delta_Nrm = position_delta.magnitude; // magnitude the same a normlizing? nope. // this could be a problem, the matlabs is normalized
+            float position_delta_Nrm = position_delta.magnitude;
 
-            if (position_delta_Nrm < _attreaction.minimumDistance)
+            if (position_delta_Nrm < attreaction.minimumDistance)
             {
-                position_delta_Nrm = _attreaction.minimumDistance;
+                position_delta_Nrm = attreaction.minimumDistance;
             }
 
-            Vector3 _attreactionForce = _attreaction.strength * _attreaction.targetOne.mass * _attreaction.targetTwo.mass * position_delta / position_delta_Nrm / position_delta_Nrm / position_delta_Nrm; // why the hell  /position_delta_Nrm 3times?
+            Vector3 attreactionForce = attreaction.strength * attreaction.targetOne.mass * attreaction.targetTwo.mass * position_delta / position_delta_Nrm / position_delta_Nrm / position_delta_Nrm; // why the hell  /position_delta_Nrm 3times?
 
-            _attreaction.targetOne.AddForce(_attreactionForce);
-            _attreaction.targetTwo.AddForce(_attreactionForce);
+            Debug.Log(attreactionForce);
+
+            if (attreactionForce.x <= 0.01 && attreactionForce.y <= 0.01 && attreactionForce.z <= 0.01 || attreactionForce.x >= - 0.01 && attreactionForce.y >= -0.01 && attreactionForce.z >= - 0.01)
+            {
+                attreaction.lineRender.SetColors(Color.red, Color.red);
+            }
+            if (attreactionForce.x >= 0.01 || attreactionForce.y >= 0.01 || attreactionForce.z >= 0.01 || attreactionForce.x <= -0.01 || attreactionForce.y <= -0.01 || attreactionForce.z <= -0.01)
+            {
+                attreaction.lineRender.SetColors(Color.blue, Color.blue);
+            }
+
+            attreaction.targetOne.AddForce(attreactionForce);
+            attreaction.targetTwo.AddForce(-attreactionForce);
         }
     }
-
-    /*
-     *         function aggregate_attractions_forces (Particle_System)
-            %AGGREGATE_ATTRACTIONS_FORCES  Aggregate attraction forces.
-            %
-            %   Example
-            %
-            %   AGGREGATE_ATTRACTIONS_FORCES (PS) aggregates the forces of all
-            %   attractions in the particle system PS on all particles they are connected to
-            %   in the corresponding particle force accumulators.
-            %
-            %   See also aggregate_forces, aggregate_drag_forces, aggregate_gravity_forces,
-            %   aggregate_spring_forces.
-
-            %   Copyright 2008-2008 buchholz.hs-bremen.de
-
-            for i_attraction = 1 : length (Particle_System.attractions)
-
-                Attraction = Particle_System.attractions(i_attraction);
-
-                Particle_1 = Attraction.particle_1;
-                Particle_2 = Attraction.particle_2;
-
-                position_delta = Particle_2.position - Particle_1.position;
-
-                position_delta_norm = norm (position_delta);
-
-                if position_delta_norm < Attraction.minimum_distance
-
-                    position_delta_norm = Attraction.minimum_distance;
-
-                end
-
-                attraction_force = ...
-                    Attraction.strength* ...
-                    Particle_1.mass* ...
-                    Particle_2.mass* ...
-                    position_delta/ ...
-                    position_delta_norm/ ...
-                    position_delta_norm/ ...
-                    position_delta_norm;
-
-                Particle_1.add_force (attraction_force);
-                Particle_2.add_force (-attraction_force);
-
-            end
-
-        end
-
-*/
 
     public void clearSysForces()
     {
@@ -277,7 +247,7 @@ public class MyParticleSystem : MonoBehaviour
         for (int i = 0; i < particles.Count; i++)
         {
             var particle = particles[i];
-            if (particle.pinned )
+            if (particle.pinned)
                 velocities.Add(Vector3.zero);
             else
                 velocities.Add(particle.velocity);
@@ -297,7 +267,7 @@ public class MyParticleSystem : MonoBehaviour
         foreach (MyParticle particle in particles)
         {
             Vector3 force = Vector3.zero;
-            if (!particle.pinned )
+            if (!particle.pinned)
                 force = particle.force;
 
             accelerations.Add(force / particle.mass);
