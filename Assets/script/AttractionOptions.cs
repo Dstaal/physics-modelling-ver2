@@ -75,7 +75,7 @@ public class AttractionOptions : MonoBehaviour
             //set the seleted particle as target one
             myMenu.targetOne = myMenu.particle;
             targetOneField.GetComponent<Text>().text = myMenu.targetOne.name.ToString();
-            myMenu.targetOne.GetComponent<Renderer>().material.SetColor("_Color", Color.green);
+            myMenu.targetOne.GetComponent<Renderer>().material.SetColor("_Color", Color.blue);
             currentSelectionStage = attractionSelectionStage.selecting;
 
             // the rest of the selection, is handin in the update -

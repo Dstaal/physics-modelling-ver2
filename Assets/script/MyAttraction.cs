@@ -2,7 +2,7 @@
 using System.Collections;
 using UnityEngine;
 
-public class MyAttraction : MonoBehaviour
+public class MyAttraction 
 {
     public List<GameObject> childrenOfThisAttraction;
 
@@ -54,12 +54,10 @@ public class MyAttraction : MonoBehaviour
 
         childrenOfThisAttraction.Add(lineHolder);
 
-        Color aColor = Color.blue; 
-
         lineRender = lineHolder.gameObject.AddComponent<LineRenderer>();
-        lineRender.material = new Material(Shader.Find("Transparent/Diffuse"));
+        lineRender.material = new Material(Shader.Find("Particles/Additive"));
         lineRender.SetWidth(0.3F, 0.3F);
-        lineRender.SetColors(aColor, aColor);
+        lineRender.SetColors(Color.blue, Color.blue);
     }
 
     public void drawLines()
