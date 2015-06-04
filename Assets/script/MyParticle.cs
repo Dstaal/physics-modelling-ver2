@@ -1,10 +1,8 @@
 ﻿using UnityEngine;
-using System.Collections;
 
 [RequireComponent(typeof(Collider))]
 public class MyParticle : MonoBehaviour
 {
-    
     public bool pinned = false;
     public float mass = 1;
     public float lifespan = 0;
@@ -33,20 +31,16 @@ public class MyParticle : MonoBehaviour
         this.age = 0f;
 
         this.transform.localScale = new Vector3(startMass, startMass, startMass);
-        
+
         this.transform.SetParent(this.targetParticleSystem.transform);
         this.name = "Particle " + this.targetParticleSystem.particles.IndexOf(this).ToString();
 
         return this;
     }
 
-    void OnCollisionEnter(Collision col) 
+    private void OnTriggerEnter(Collider other)
     {
-        if (col.gameObject.name == "Particle")
-        {
-            Debug.Log(col.gameObject.name);
-            Debug.Log("something hit");
-        }
+        this.velocity = -velocity;
     }
 
     public void clearForce()
@@ -56,8 +50,6 @@ public class MyParticle : MonoBehaviour
 
     public void AddForce(Vector3 addedForce)
     {
-       checkCollsion(this.position, mass/2);
-
         if (!this.pinned)
             this.force += addedForce;
     }
@@ -94,26 +86,11 @@ public class MyParticle : MonoBehaviour
                 }
             }
 
-
             Destroy(this.gameObject, 0.01f);
             targetParticleSystem.particles.Remove(this);
 
             // add more lists to remove from if more list are added e.g. springs, atrecctions etc.
         }
-    }
-
-    public void checkCollsion(Vector3 particleCenter, float radius) 
-    {
-
-        Collider[] hitColliders = Physics.OverlapSphere(particleCenter, radius);
-
-             
-
-        foreach (Collider col in hitColliders)
-        {
-           // Debug.Log(col.gameObject.tag);
-        }
-      
     }
 
     public void SetPinned(bool bPinned)

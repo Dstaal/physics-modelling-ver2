@@ -127,7 +127,7 @@ public class MyParticleSystem : MonoBehaviour
 
                     Vector3 dontdropbelow = new Vector3(pos.x, gourndlevel, pos.z);
 
-                    particle.position = dontdropbelow; 
+                    particle.position = dontdropbelow;
                 }
             }
         }
@@ -194,9 +194,7 @@ public class MyParticleSystem : MonoBehaviour
 
             Vector3 attreactionForce = attreaction.strength * attreaction.targetOne.mass * attreaction.targetTwo.mass * position_delta / position_delta_Nrm / position_delta_Nrm / position_delta_Nrm; // why the hell  /position_delta_Nrm 3times?
 
-            Debug.Log(attreactionForce);
-
-            if (attreactionForce.x <= 0.01 && attreactionForce.y <= 0.01 && attreactionForce.z <= 0.01 || attreactionForce.x >= - 0.01 && attreactionForce.y >= -0.01 && attreactionForce.z >= - 0.01)
+            if (attreactionForce.x <= 0.01 && attreactionForce.y <= 0.01 && attreactionForce.z <= 0.01 || attreactionForce.x >= -0.01 && attreactionForce.y >= -0.01 && attreactionForce.z >= -0.01)
             {
                 attreaction.lineRender.SetColors(Color.red, Color.red);
             }

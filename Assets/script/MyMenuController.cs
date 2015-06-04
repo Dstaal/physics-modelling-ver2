@@ -46,7 +46,7 @@ public class MyMenuController : MonoBehaviour
     private Vector3 _startGravity = new Vector3(0, -2.5f, 0);
 
     private float _startMass = 1f;
-    private float _startDrag = 1f;
+    private float _startDrag = 1.2f;
 
     private bool _yLocked = false;
 
@@ -101,8 +101,7 @@ public class MyMenuController : MonoBehaviour
 
             if (Input.GetMouseButtonUp(0))
             {
-                this.currentMovemnet = MoveOptions.None;
-       
+                this.currentMovemnet = MoveOptions.None;  
             }
         }
 
