@@ -83,10 +83,22 @@ public class MyParticleSystem : MonoBehaviour
         clearSysForces();
 
         UpdateLines();
+        updateExternalForce();
         updateSprings();
         updateAttractions();
         updateDrag();
         addGravity();
+    }
+
+    private void updateExternalForce ()
+    {
+        foreach (MyParticle particle in particles)
+        {
+            Vector3 ExternalForce = -particle.force;
+
+            particle.AddForce(ExternalForce);
+        }
+
     }
 
     private void UpdateLines()

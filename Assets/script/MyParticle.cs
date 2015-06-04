@@ -40,7 +40,17 @@ public class MyParticle : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        this.velocity = -velocity;
+        Debug.Log("partelce nr " + this.name + "  velo.sqr : " + this.velocity.sqrMagnitude);
+
+        if (this.velocity.sqrMagnitude < 1f)
+        {
+            Debug.Log("not moveing : " + this.name + "trying to add" + (other.transform.position - this.transform.position).normalized * mass * 2f + "mass : " + mass);
+            this.force = ((other.transform.position - this.transform.position).normalized * mass * 2f);
+        }
+        else
+        {
+            this.velocity = -velocity;
+        }
     }
 
     public void clearForce()
