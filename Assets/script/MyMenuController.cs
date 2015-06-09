@@ -41,7 +41,7 @@ public class MyMenuController : MonoBehaviour
     public MyParticle targetOne;
     public MyParticle targetTwo;
 
-    private Vector3 _startPosition = new Vector3(0, 1, 1);
+    private Vector3 _startPosition = new Vector3(20, 1, 1);
     private Vector3 _startVelocity = new Vector3(0, 0, 0);
     private Vector3 _startGravity = new Vector3(0, -2.5f, 0);
 
@@ -96,6 +96,7 @@ public class MyMenuController : MonoBehaviour
             var pos = GetMousePos("Ground");
             if (pos.HasValue)
             {
+                Debug.Log(pos);
                 particle.position = pos.Value;
             }
 
@@ -184,7 +185,7 @@ public class MyMenuController : MonoBehaviour
             particle.pinned = false;
         }
         pinnedField.GetComponent<Text>().text = particle.pinned.ToString();
-        particle.SetPinned(particle.pinned);
+        particle.SetPinnedColor(particle.pinned);
     }
 
     public RaycastHit? GetHitAtMousePos(string tag)

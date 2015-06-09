@@ -38,21 +38,6 @@ public class MyParticle : MonoBehaviour
         return this;
     }
 
-    private void OnTriggerEnter(Collider other)
-    {
-        Debug.Log("partelce nr " + this.name + "  velo.sqr : " + this.velocity.sqrMagnitude);
-
-        if (this.velocity.sqrMagnitude < 1f)
-        {
-            Debug.Log("not moveing : " + this.name + "trying to add" + (other.transform.position - this.transform.position).normalized * mass * 2f + "mass : " + mass);
-            this.force = ((other.transform.position - this.transform.position).normalized * mass * 2f);
-        }
-        else
-        {
-            this.velocity = -velocity;
-        }
-    }
-
     public void clearForce()
     {
         this.force = Vector3.zero;
@@ -99,11 +84,10 @@ public class MyParticle : MonoBehaviour
             Destroy(this.gameObject, 0.01f);
             targetParticleSystem.particles.Remove(this);
 
-            // add more lists to remove from if more list are added e.g. springs, atrecctions etc.
         }
     }
 
-    public void SetPinned(bool bPinned)
+    public void SetPinnedColor(bool bPinned)
     {
         this.pinned = bPinned;
 

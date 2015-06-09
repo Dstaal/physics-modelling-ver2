@@ -28,19 +28,7 @@ public class MyParticleSystem : MonoBehaviour
         this.gravity = startGravity;
         this.drag = startDrag;
 
-        //didn't add sampleing raet and system time. do i need those?
-
         return this;
-    }
-
-    // Use this for initialization
-    private void Start()
-    {
-    }
-
-    // Update is called once per frame
-    private void Update()
-    {
     }
 
     private void FixedUpdate()
@@ -59,13 +47,11 @@ public class MyParticleSystem : MonoBehaviour
         }
 
         systemTime += Time.fixedDeltaTime;
-        //advanceParticlesAges(Time.fixedDeltaTime);
+       
     }
 
     private void advanceTime(float deltaTime)
     {
-        // TODO: kill old particles
-
         var timeStart = systemTime;
         var timeEnd = timeStart + deltaTime;
 
@@ -83,23 +69,12 @@ public class MyParticleSystem : MonoBehaviour
         clearSysForces();
 
         UpdateLines();
-        updateExternalForce();
         updateSprings();
         updateAttractions();
         updateDrag();
         addGravity();
     }
 
-    private void updateExternalForce ()
-    {
-        foreach (MyParticle particle in particles)
-        {
-            Vector3 ExternalForce = -particle.force;
-
-            particle.AddForce(ExternalForce);
-        }
-
-    }
 
     private void UpdateLines()
     {
@@ -135,7 +110,7 @@ public class MyParticleSystem : MonoBehaviour
                 {
                     var pos = particle.position;
 
-                    var gourndlevel = 0;
+                    var gourndlevel = 0f;
 
                     Vector3 dontdropbelow = new Vector3(pos.x, gourndlevel, pos.z);
 
@@ -328,11 +303,10 @@ public class MyParticleSystem : MonoBehaviour
         return phaseSpace;
     }
 
-    private List<PhaseSpace> computeStateDerivate(List<PhaseSpace> phaseSpaceStates, float deltaTime) //not sure time needed // herein lays the problem
+    private List<PhaseSpace> computeStateDerivate(List<PhaseSpace> phaseSpaceStates, float deltaTime)
     {
         List<PhaseSpace> stateDerivate = null;
 
-        //if (this.currentPhaseSpace != null)
         {
             updateAllForces();
 
