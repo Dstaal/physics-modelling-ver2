@@ -6,7 +6,6 @@ public enum MoveOptions
     None,
     Moving,
     Lifteing,
-   
 }
 
 public enum ParticleOptions
@@ -28,6 +27,7 @@ public class MyMenuController : MonoBehaviour
 
     //ui elemetns
     public GameObject nameFieldPrefab;
+
     public GameObject massFieldValue;
     public GameObject pinnedField;
 
@@ -55,14 +55,12 @@ public class MyMenuController : MonoBehaviour
         springObt = this.gameObject.GetComponent<SpringOptions>();
     }
 
-    // Update is called once per frame
     private void Update()
     {
         //update seleceted particle name field
         if (particle != null)
         {
             nameFieldPrefab.GetComponent<Text>().text = particle.name.ToString();
-
         }
 
         if (this.currentMovemnet == MoveOptions.None)
@@ -74,7 +72,6 @@ public class MyMenuController : MonoBehaviour
                 {
                     this.currentMovemnet = MoveOptions.Moving;
                     particle = hitParticle;
-           
                 }
             }
             if (Input.GetMouseButtonDown(2))
@@ -85,7 +82,6 @@ public class MyMenuController : MonoBehaviour
                     this.currentMovemnet = MoveOptions.Lifteing;
                     particle = hitParticle;
                     _yLocked = true;
-                
                 }
             }
         }
@@ -96,13 +92,12 @@ public class MyMenuController : MonoBehaviour
             var pos = GetMousePos("Ground");
             if (pos.HasValue)
             {
-                Debug.Log(pos);
                 particle.position = pos.Value;
             }
 
             if (Input.GetMouseButtonUp(0))
             {
-                this.currentMovemnet = MoveOptions.None;  
+                this.currentMovemnet = MoveOptions.None;
             }
         }
 
@@ -115,19 +110,17 @@ public class MyMenuController : MonoBehaviour
             {
                 var pos = particle.transform.position;
 
-                var heightY = (height.Value.y - pos.y + Screen.height/3) * Time.fixedDeltaTime ;
+                var heightY = (height.Value.y - pos.y + Screen.height / 3) * Time.fixedDeltaTime;
 
                 Vector3 tempPos = new Vector3(pos.x, heightY, pos.z);
 
                 particle.transform.position = tempPos;
-      
             }
 
             if (Input.GetMouseButtonUp(2))
             {
                 this.currentMovemnet = MoveOptions.None;
                 _yLocked = false;
-      
             }
         }
 
@@ -137,14 +130,11 @@ public class MyMenuController : MonoBehaviour
         {
             this.currentState = ParticleOptions.DisplayConnections;
             this.optionsCanvesPrefab.SetActive(true);
-        
-
         }
         else if (Input.GetMouseButtonUp(1) && this.currentState == ParticleOptions.DisplayConnections)
         {
             this.currentState = ParticleOptions.None;
             this.optionsCanvesPrefab.SetActive(false);
-         
         }
     }
 
@@ -161,7 +151,6 @@ public class MyMenuController : MonoBehaviour
 
         newParticle.Initialize(myParticleSystem, _startMass, _startPosition, _startVelocity, false, 0);
 
-        // note  Initialize(MyParticleSystem parrnetParticleSystem, float startMass, Vector3 startPosition, Vector3 startVelocity, bool setPinned, float setLifeSpan)
     }
 
     public void ClickDeleteParticle()
@@ -202,7 +191,6 @@ public class MyMenuController : MonoBehaviour
         return null;
     }
 
-
     public Vector3? GetMousePos(string tag)
     {
         var hit = GetHitAtMousePos(tag);
@@ -229,7 +217,6 @@ public class MyMenuController : MonoBehaviour
     public void massSliderOnChange()
     {
         massFieldValue.GetComponent<Text>().text = massSlider.value.ToString();
-        _startMass = massSlider.value; 
+        _startMass = massSlider.value;
     }
-
 }

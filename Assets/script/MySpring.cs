@@ -30,8 +30,6 @@ public class MySpring
         this.parnetParticleSystem = parnetParticleSystem;
         this.parnetParticleSystem.springs.Add(this);
 
-        childrenOfThisSpring = new List<GameObject>();
-
         this.targetOne = targetOne;
         this.targetTwo = targetTwo;
 
@@ -39,7 +37,8 @@ public class MySpring
         this.strength = strength;
         this.damping = damping;
 
-   
+        childrenOfThisSpring = new List<GameObject>();
+
         GameObject lineHolder = new GameObject();
 
         lineHolder.transform.SetParent(targetOne.transform);

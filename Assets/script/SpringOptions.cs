@@ -56,7 +56,6 @@ public class SpringOptions : MonoBehaviour
                 if (Input.GetMouseButtonDown(0))
                 {
                     myMenu.targetTwo = myMenu.GetParticleAtPos();
-                    Debug.Log("trying to set targetTwo");
                     targetTwoField.GetComponent<Text>().text = myMenu.targetTwo.name.ToString();
                     myMenu.targetTwo.GetComponent<Renderer>().material.SetColor("_Color", Color.green);
                     this.currentSelectionStage = springSelectionStage.finalizing;
